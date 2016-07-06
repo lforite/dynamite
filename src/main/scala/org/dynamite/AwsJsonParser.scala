@@ -8,10 +8,11 @@ trait AwsJsonParser {
 
   private def shrinkField(field: (String, JValue)): (String, JValue) = field match {
     case (name, JObject(List(JField("S", s: JString)))) => (name, s)
-    case (name, JObject(List(JField("N", s: JString)))) => (name, s)
-    case (name, JObject(List(JField("BOOL", s: JBool)))) => (name, s)
-    case (name, JObject(List(JField("SS", s: JArray)))) => (name, s)
-    case (name, JObject(List(JField("L", s: JArray)))) => (name, s map shrinkObject)
+    case (name, JObject(List(JField("N", n: JString)))) => (name, n)
+    case (name, JObject(List(JField("BOOL", b: JBool)))) => (name, b)
+    case (name, JObject(List(JField("SS", ss: JArray)))) => (name, ss)
+    case (name, JObject(List(JField("L", l: JArray)))) => (name, l map shrinkObject)
+    case (name, JObject(List(JField("M", m: JObject)))) => (name, shrinkObject(m))
   }
 
   private def shrinkObject(json: JValue): JValue = json match {

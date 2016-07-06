@@ -4,8 +4,6 @@ version := "1.0"
 
 scalaVersion := "2.11.8"
 
-lazy val circeVersion: String = "0.4.1"
-
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.2.4"
 libraryDependencies += "net.databinder.dispatch" %% "dispatch-core" % "0.11.2"
 
