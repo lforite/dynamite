@@ -13,6 +13,7 @@ trait AwsJsonParser {
       case (name, JObject(List(JField("S", s: JString)))) => (name, s)
       case (name, JObject(List(JField("N", s: JString)))) => (name, s)
       case (name, JObject(List(JField("BOOL", s: JBool)))) => (name, s)
+      case (name, JObject(List(JField("SS", s: JArray)))) => (name, s)
     }
   }
 

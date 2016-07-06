@@ -14,16 +14,19 @@ class AwsJsonParserTest extends Specification {
     val sField: JValue = JObject(List(JField("S", JString("s value"))))
     val nField: JValue = JObject(List(JField("N", JString("n value"))))
     val boolField: JValue = JObject(List(JField("BOOL", JBool(true))))
+    val ssField: JValue = JObject(List(JField("SS", JArray(List(JString("s1"), JString("s2"))))))
 
     val aws: JValue = JObject(List(
       JField("sField", sField),
       JField("nField", nField),
-      JField("bField", boolField)))
+      JField("bField", boolField),
+      JField("ssField", ssField)))
 
-    val expected: JValue = JObject(
-      List(JField("sField", JString("s value")),
-        JField("nField", JString("n value")),
-        JField("bField", JBool(true))))
+    val expected: JValue = JObject(List(
+      JField("sField", JString("s value")),
+      JField("nField", JString("n value")),
+      JField("bField", JBool(true)),
+      JField("ssField", JArray(List(JString("s1"), JString("s2"))))))
 
     Dummy.fromAws(aws) must be_==(expected)
   }
