@@ -11,6 +11,7 @@ trait AwsJsonParser {
   private def shrinkField(t: (String, JValue)): (String, JValue) = {
     t match {
       case (name, JObject(List(JField("S", s: JString)))) => (name, s)
+      case (name, JObject(List(JField("N", s: JString)))) => (name, s)
     }
   }
 
