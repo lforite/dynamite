@@ -3,10 +3,8 @@ package org.dynamite
 import org.json4s.JsonAST._
 import org.specs2._
 
-class AwsJsonParserTest extends Specification {
-  def is =
-    s2"""
- Specification for the AwsJsonParser
+class AwsJsonReaderTest extends Specification { def is = s2"""
+ Specification for the AwsJsonReader
    Aws noise is swallowed by the parser                 $fromAws
   """
 
@@ -38,6 +36,6 @@ class AwsJsonParserTest extends Specification {
   }
 
 
-  private[this] object Dummy extends AwsJsonParser
+  private[this] object Dummy extends AwsJsonReader
 
 }
