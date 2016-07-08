@@ -9,7 +9,6 @@ class AwsJsonWriterTest extends Specification { def is = s2"""
   """
 
   def toAws = {
-
     val json = JObject(List(
       "sField" -> JString("s value")))
 
