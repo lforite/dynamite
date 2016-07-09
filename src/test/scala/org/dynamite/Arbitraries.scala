@@ -22,5 +22,6 @@ object Arbitraries {
   def jsValueGen: Gen[JValue] = oneOf(
     arbitrary[String].map(JString(_)),
     arbitrary[Int].map(JInt(_)),
-    arbitrary[Double].map(JDecimal(_)))
+    arbitrary[Double].map(JDecimal(_)),
+    arbitrary[Long].map(JLong(_)))
 }

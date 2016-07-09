@@ -31,6 +31,7 @@ trait AwsJsonWriter {
     case (name, js: JString) => (name, JObject(List(JField("S", js))))
     case (name, JInt(i)) => (name, JObject(List(JField("N", JString(i.toString)))))
     case (name, JDecimal(d)) => (name, JObject(List(JField("N", JString(d.toString)))))
+    case (name, JLong(d)) => (name, JObject(List(JField("N", JString(d.toString)))))
   }
 
   private def augmentObject(json: JValue): JValue = json match {
