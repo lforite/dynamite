@@ -10,7 +10,9 @@ class AwsJsonWriterTest extends Specification { def is = s2"""
    JDecimal are represented as N objects $augmentJDecimal
    JLong are represented as N objects $augmentJLong
    JBool are represented as BOOL objects $augmentJBool
-   JArray of JString are represented as SS objects $augmentJArray
+   JArray of JString are represented as SS objects $augmentJArrayString
+   JObject are represented as M objects $augmentJObject
+   JArray of JObject are represented as L objects $augmentJArrayObject
    Json is augmented with Aws noise                 $toAws
   """
 
@@ -64,12 +66,35 @@ class AwsJsonWriterTest extends Specification { def is = s2"""
     Dummy.toAws(json) must be_==(expected)
   }
 
-  def augmentJArray = {
+  def augmentJArrayString = {
     val json = JObject(List(
       "aField" -> JArray(List(JString("a"), JString("b")))))
 
     val expected = JObject(List(
       "aField" -> JObject(List("SS" -> JArray(List(JString("a"), JString("b")))))))
+
+    Dummy.toAws(json) must be_==(expected)
+  }
+
+  def augmentJObject = {
+    val json = JObject(List(
+      "oField" -> JObject(List("inner" -> JString("hello !")))))
+
+    val expected = JObject(List(
+      "oField" -> JObject(List("M" -> JObject(List("inner" -> JObject(List("S" -> JString("hello !")))))))))
+
+    Dummy.toAws(json) must be_==(expected)
+  }
+
+  def augmentJArrayObject = {
+    val json = JObject(List(
+      "aField" -> JArray(List(JObject(List("inner" -> JString("hello !")))))))
+
+    val expected = JObject(List(
+      "aField" -> JObject(List("L" ->
+        JArray(List(
+          JObject(List("M" -> JObject(List("inner" -> JObject(List("S" -> JString("hello !")))))))
+        ))))))
 
     Dummy.toAws(json) must be_==(expected)
   }
@@ -83,7 +108,7 @@ class AwsJsonWriterTest extends Specification { def is = s2"""
       "sField" -> JObject(List("S" -> JString("s value"))),
       "nField" -> JObject(List("N" -> JString("1")))))
 
-      Dummy.toAws(json) must be_==(expected)
+    Dummy.toAws(json) must be_==(expected)
   }
 
   private[this] object Dummy extends AwsJsonWriter

@@ -14,7 +14,7 @@ class AwsJsonReaderWriterTest extends Specification with ScalaCheck { def is = s
     val json = compact(render(jsonObject))
     val transformedJson = compact(render(Dummy.fromAws(Dummy.toAws(jsonObject))))
     transformedJson must be_==(json)
-  }
+  }.set(minTestsOk = 10000, workers = 10)
 
   private[this] object Dummy extends AwsJsonReader with AwsJsonWriter
 }
