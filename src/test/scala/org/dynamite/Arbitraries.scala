@@ -24,5 +24,6 @@ object Arbitraries {
     arbitrary[Int].map(JInt(_)),
     arbitrary[Double].map(JDecimal(_)),
     arbitrary[Long].map(JLong(_)),
-    arbitrary[Boolean].map(JBool(_)))
+    arbitrary[Boolean].map(JBool(_)),
+    listOf(arbitrary[String]).map(jstrings => JArray(jstrings map JString)))
 }

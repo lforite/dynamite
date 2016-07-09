@@ -10,6 +10,7 @@ class AwsJsonWriterTest extends Specification { def is = s2"""
    JDecimal are represented as N objects $augmentJDecimal
    JLong are represented as N objects $augmentJLong
    JBool are represented as BOOL objects $augmentJBool
+   JArray of JString are represented as SS objects $augmentJArray
    Json is augmented with Aws noise                 $toAws
   """
 
@@ -59,6 +60,16 @@ class AwsJsonWriterTest extends Specification { def is = s2"""
 
     val expected = JObject(List(
       "bField" -> JObject(List("BOOL" -> JBool(true)))))
+
+    Dummy.toAws(json) must be_==(expected)
+  }
+
+  def augmentJArray = {
+    val json = JObject(List(
+      "aField" -> JArray(List(JString("a"), JString("b")))))
+
+    val expected = JObject(List(
+      "aField" -> JObject(List("SS" -> JArray(List(JString("a"), JString("b")))))))
 
     Dummy.toAws(json) must be_==(expected)
   }
