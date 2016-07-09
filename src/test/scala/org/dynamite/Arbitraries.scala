@@ -23,5 +23,6 @@ object Arbitraries {
     arbitrary[String].map(JString(_)),
     arbitrary[Int].map(JInt(_)),
     arbitrary[Double].map(JDecimal(_)),
-    arbitrary[Long].map(JLong(_)))
+    arbitrary[Long].map(JLong(_)),
+    arbitrary[Boolean].map(JBool(_)))
 }
