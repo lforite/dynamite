@@ -5,10 +5,12 @@ import org.specs2.Specification
 
 class AwsJsonWriterTest extends Specification { def is = s2"""
  Specification for the AwsJsonReader
+   JString are represented as S objects $augmentJString
+   JInt are represented as N objects $augmentJInt
    Json is augmented with Aws noise                 $toAws
   """
 
-  def toAws = {
+  def augmentJString = {
     val json = JObject(List(
       "sField" -> JString("s value")))
 
@@ -18,6 +20,27 @@ class AwsJsonWriterTest extends Specification { def is = s2"""
     Dummy.toAws(json) must be_==(expected)
   }
 
+  def augmentJInt = {
+    val json = JObject(List(
+      "nField" -> JInt(1)))
+
+    val expected = JObject(List(
+      "nField" -> JObject(List("N" -> JString("1")))))
+
+    Dummy.toAws(json) must be_==(expected)
+  }
+
+  def toAws = {
+    val json = JObject(List(
+      "sField" -> JString("s value"),
+      "nField" -> JInt(1)))
+
+    val expected = JObject(List(
+      "sField" -> JObject(List("S" -> JString("s value"))),
+      "nField" -> JObject(List("N" -> JString("1")))))
+
+      Dummy.toAws(json) must be_==(expected)
+  }
 
   private[this] object Dummy extends AwsJsonWriter
 

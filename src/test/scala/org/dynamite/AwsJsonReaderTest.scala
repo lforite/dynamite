@@ -26,12 +26,12 @@ class AwsJsonReaderTest extends Specification { def is = s2"""
   }
 
   def shrinkNField = {
-    val nField: JValue = JObject(List(JField("N", JString("n value"))))
+    val nField: JValue = JObject(List(JField("N", JString("123"))))
     val aws: JValue = JObject(List(
       JField("nField", nField)))
 
     val expected: JValue = JObject(List(
-      JField("nField", JString("n value"))))
+      JField("nField", JDecimal(BigDecimal(123)))))
 
     Dummy.fromAws(aws) must be_==(expected)
   }
@@ -87,7 +87,7 @@ class AwsJsonReaderTest extends Specification { def is = s2"""
 
   def fromAws = {
     val sField: JValue = JObject(List(JField("S", JString("s value"))))
-    val nField: JValue = JObject(List(JField("N", JString("n value"))))
+    val nField: JValue = JObject(List(JField("N", JString("123"))))
     val boolField: JValue = JObject(List(JField("BOOL", JBool(true))))
     val ssField: JValue = JObject(List(JField("SS", JArray(List(JString("s1"), JString("s2"))))))
     val lField: JValue = JObject(List(JField("L", JArray(List(JInt(1), JInt(2))))))
@@ -103,7 +103,7 @@ class AwsJsonReaderTest extends Specification { def is = s2"""
 
     val expected: JValue = JObject(List(
       JField("sField", JString("s value")),
-      JField("nField", JString("n value")),
+      JField("nField", JDecimal(123)),
       JField("bField", JBool(true)),
       JField("ssField", JArray(List(JString("s1"), JString("s2")))),
       JField("lField", JArray(List(JInt(1), JInt(2)))),

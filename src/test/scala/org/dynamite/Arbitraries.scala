@@ -1,7 +1,7 @@
 package org.dynamite
 
 import org.json4s.JsonAST._
-import org.scalacheck.Gen.{listOf, const}
+import org.scalacheck.Gen.{listOf, oneOf}
 import org.scalacheck.{Arbitrary, Gen}
 import Arbitrary.arbitrary
 
@@ -19,5 +19,7 @@ object Arbitraries {
       value <- jsValueGen
     } yield (field, value)
 
-  def jsValueGen = arbitrary[String].map(JString(_))
+  def jsValueGen: Gen[JValue] = oneOf(
+    arbitrary[String].map(JString(_)),
+    arbitrary[Int].map(JInt(_)))
 }
