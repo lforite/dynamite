@@ -1,6 +1,6 @@
 package org.dynamite.http
 
-import org.dynamite.dsl.AwsCredentials
+import org.dynamite.dsl._
 import org.specs2.mutable.Specification
 
 class AwsRequestSignerTest extends Specification { override def is = s2""""
@@ -9,11 +9,11 @@ class AwsRequestSignerTest extends Specification { override def is = s2""""
       """"
 
   def sign = {
-    val secretKey = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
-    val dateStamp = "20120215"
-    val regionName = "us-east-1"
-    val serviceName = "iam"
-    val credentials = AwsCredentials("anyAccessKey", secretKey)
+    val secretKey = AwsSecretKey("wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY")
+    val dateStamp = DateStamp("20120215")
+    val regionName = AwsRegion("us-east-1")
+    val serviceName = AwsService("iam")
+    val credentials = AwsCredentials(AwsAccessKey("anyAccessKey"), secretKey)
 
     AwsRequestSigner.sign(credentials, dateStamp, regionName, serviceName) fold(
       s => ko,
