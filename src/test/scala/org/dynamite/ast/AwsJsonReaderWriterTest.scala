@@ -1,6 +1,6 @@
-package org.dynamite
+package org.dynamite.ast
 
-import org.dynamite.Arbitraries._
+import org.dynamite.ast.Arbitraries._
 import org.json4s.JsonAST.JObject
 import org.json4s.jackson.JsonMethods._
 import org.specs2._

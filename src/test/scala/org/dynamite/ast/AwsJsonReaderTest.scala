@@ -1,4 +1,4 @@
-package org.dynamite
+package org.dynamite.ast
 
 import org.json4s.JsonAST._
 import org.specs2._

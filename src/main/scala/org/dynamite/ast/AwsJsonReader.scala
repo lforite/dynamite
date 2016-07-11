@@ -1,10 +1,9 @@
-package org.dynamite
+package org.dynamite.ast
 
 import org.json4s.JsonAST._
 
 trait AwsJsonReader {
-
-  def fromAws(json: JValue): JValue = shrinkObject(json)
+  protected[dynamite] def fromAws(json: JValue): JValue = shrinkObject(json)
 
   private val Names = Set("M", "SS")
 
@@ -26,9 +25,8 @@ trait AwsJsonReader {
 
 }
 
-
 trait AwsJsonWriter {
-  def toAws(json: JValue): JValue = augmentObject(json)
+  protected[dynamite] def toAws(json: JValue): JValue = augmentObject(json)
 
   private def augmentField(field: (String, JValue)): (String, JValue) = field match {
     case (name, js: JString) => (name, JObject(List("S" -> js)))
