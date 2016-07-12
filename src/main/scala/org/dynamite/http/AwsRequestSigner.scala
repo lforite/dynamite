@@ -8,8 +8,8 @@ import org.dynamite.dsl.{AwsAuthorization, AwsCredentials, AwsSecretKey, _}
 import scalaz.Scalaz._
 import scalaz.\/
 
-object AwsRequestSigner {
-  def sign(
+trait AwsRequestSigner {
+  protected[dynamite] def sign(
     credentials: AwsCredentials,
     dateStamp: DateStamp,
     region: AwsRegion,

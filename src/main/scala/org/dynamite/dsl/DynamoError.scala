@@ -1,4 +1,4 @@
-package org.dynamite
+package org.dynamite.dsl
 
 /** more info at http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/CommonErrors.html */
 sealed trait DynamoError
@@ -19,3 +19,5 @@ case object RequestExpired extends DynamoError
 case object ServiceUnavailable extends DynamoError
 case object Throttling extends DynamoError
 case object ValidationError extends DynamoError
+
+case class SigningError(error: String) extends DynamoError

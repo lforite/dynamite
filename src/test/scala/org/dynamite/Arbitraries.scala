@@ -1,11 +1,24 @@
-package org.dynamite.ast
+package org.dynamite
 
+import org.json4s.DefaultFormats
 import org.json4s.JsonAST.{JObject, _}
+import org.json4s.jackson.Serialization.write
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen.{oneOf, _}
 import org.scalacheck.{Arbitrary, Gen}
 
+/** Encapsulate a valid json as a string */
+case class ValidJson(json: String)
+
 object Arbitraries {
+
+  implicit private val formats = DefaultFormats
+
+  implicit val validJsonArbitrary = Arbitrary[ValidJson] {
+    for {
+      jsObject <- genJObject
+    } yield ValidJson(write(jsObject))
+  }
 
   implicit val jsObjectArbitrary = Arbitrary[JObject] {
     genJObject
@@ -30,12 +43,12 @@ object Arbitraries {
 
   def genSimpleValue: Gen[JValue] = {
     oneOf(
-      arbitrary[String].map(JString(_)),
+      arbitrary[String].map(JString),
       arbitrary[Int].map(JInt(_)),
       arbitrary[Double].map(JDecimal(_)),
-      arbitrary[Long].map(JLong(_)),
+      arbitrary[Long].map(JLong),
       arbitrary[Boolean].map(JBool(_)))
   }
 
-  private def size = choose(0, 5).sample.get
+  private def size = choose(0, 3).sample.get
 }
