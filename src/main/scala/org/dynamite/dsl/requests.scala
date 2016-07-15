@@ -35,8 +35,5 @@ case class GetItemResponse(
 )
 
 object GetItemResponse {
-  def fromJson(jValue: JValue): GetItemResponse =
-    GetItemResponse(
-      jValue \ "Item"
-    )
+  def fromJson(jValue: JValue): GetItemResponse = GetItemResponse(jValue \ "Item")
 }

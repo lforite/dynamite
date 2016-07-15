@@ -1,6 +1,5 @@
 package org.dynamite
 
-
 import java.util.Date
 
 import com.ning.http.client.Response
@@ -10,6 +9,7 @@ import org.dynamite.ast.{AwsJsonReader, AwsJsonWriter}
 import org.dynamite.dsl.GetItemRequest.toJson
 import org.dynamite.dsl._
 import org.dynamite.http._
+import org.dynamite.http.auth.AwsRequestSigner
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods._
 
@@ -47,16 +47,25 @@ case class DynamiteClient[A](
 
   override def get(id: String): DynamoAction[Option[A]] = {
     val request: DynamoError \/ Req = for {
-      dateStamp <- DateStamp(new Date().formatted("yyyyMMdd")).right
-      auth <- sign(credentials, dateStamp, AwsRegion("eu"), AwsService("dynamo"))
-      headers <- (AuthorizationHeader(auth) :: AmazonDateHeader(dateStamp) :: getHeaders).map(_.render).toMap.right
+      dateStamp <- DateStamp("20160714T064329Z").right
+      auth <- sign(credentials, dateStamp, AwsRegion("eu-west-1"), AwsService("dynamodb"))
+      headers <- (
+        AuthorizationHeader(auth) ::
+          AmazonDateHeader(dateStamp) ::
+          HostHeader(configuration.host) ::
+          getHeaders
+        ).map(_.render).toMap.right
       request <- GetItemRequest(key = Map("id" -> Map("S" -> id)), table = configuration.table).right
       json <- compact(render(toJson(request))).right
       req <- (url(configuration.host) << json <:< headers).right
     } yield req
 
-    EitherT(Future(request)) flatMap { req =>
-      EitherT.fromEither(Http(req).either).leftMap(e => BasicDynamoError())
+    EitherT.fromDisjunction[Future](request) flatMap { req =>
+      EitherT.fromEither(Http(req).either).leftMap(e => {
+        println(e)
+        BasicDynamoError()
+      }
+      )
     } flatMapF { r =>
       Future(handleResponse(r))
     } toEither
@@ -65,8 +74,9 @@ case class DynamiteClient[A](
   private def handleResponse(res: Response): DynamoError \/ Option[A] =
     for {
       responseBody <- extract(res)
+      _ <- println(responseBody).right
       json <- parse(responseBody)
-      getResponse <- GetItemResponse(json).right
+      getResponse <- GetItemResponse.fromJson(json).right
       transformed <- fromAws(getResponse.item).right
     } yield transformed.extractOpt[A]
 

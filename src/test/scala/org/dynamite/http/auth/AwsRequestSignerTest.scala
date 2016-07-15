@@ -1,4 +1,4 @@
-package org.dynamite.http
+package org.dynamite.http.auth
 
 import org.dynamite.dsl._
 import org.specs2.mutable.Specification

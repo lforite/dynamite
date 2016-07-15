@@ -26,3 +26,7 @@ case class AmazonDateHeader(dateStamp: DateStamp) extends HttpHeader {
 case class AmazonTargetHeader(value: String) extends HttpHeader {
   def render = "X-Amz-Target" -> value
 }
+
+case class HostHeader(value: String) extends HttpHeader {
+  def render = "host" -> value
+}
