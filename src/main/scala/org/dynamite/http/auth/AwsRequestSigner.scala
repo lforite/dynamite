@@ -34,9 +34,9 @@ trait AwsRequestSigner
     } yield result
 }
 
-/** AWS Signature V4 first part of the protocol  more details at
+/** AWS Signature V4 first part of the signing protocol; more details at
   * http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html */
-trait AwsCanonicalRequestCreator
+trait AwsCanonicalRequestBuilder
   extends HexFormatter
     with HashFunctions {
 
@@ -85,4 +85,28 @@ trait AwsCanonicalRequestCreator
       _.render._1.toLowerCase
     } sorted) mkString ";"
   }
+}
+
+/** AWS Signature V4 second part of the signing protocol; more details at
+  * http://docs.aws.amazon.com/general/latest/gr/sigv4-create-string-to-sign.html */
+trait AwsStringToSignBuilder
+  extends HashFunctions
+    with HexFormatter {
+
+  protected[dynamite] def stringToSign(
+    awsDate: AwsDate,
+    region: AwsRegion,
+    service: AwsService,
+    canonicalRequest: String): SigningError \/ String = {
+    for {
+      algorithm <- "AWS4-HMAC-SHA256".right
+      date <- awsDate.dateTime.value.right
+      scope <- s"${awsDate.date.value}/${region.value}/${service.value}/aws4_request".right
+      hashedCanonicalRequest <- sha256(canonicalRequest) map toHexFormat
+    } yield algorithm + '\n' +
+      date + '\n' +
+      scope + '\n' +
+      hashedCanonicalRequest
+  }
+
 }

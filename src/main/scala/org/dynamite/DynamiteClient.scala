@@ -1,5 +1,6 @@
 package org.dynamite
 
+import java.time.LocalDateTime
 import java.util.Date
 
 import com.ning.http.client.Response
@@ -47,11 +48,11 @@ case class DynamiteClient[A](
 
   override def get(id: String): DynamoAction[Option[A]] = {
     val request: DynamoError \/ Req = for {
-      dateStamp <- DateStamp("20160714T064329Z").right
-      auth <- sign(credentials, dateStamp, AwsRegion("eu-west-1"), AwsService("dynamodb"))
+      dateStamp <- AwsDate(LocalDateTime.now()).right
+      auth <- sign(credentials, dateStamp.date, AwsRegion("eu-west-1"), AwsService("dynamodb"))
       headers <- (
         AuthorizationHeader(auth) ::
-          AmazonDateHeader(dateStamp) ::
+          AmazonDateHeader(dateStamp.dateTime) ::
           HostHeader(configuration.host) ::
           getHeaders
         ).map(_.render).toMap.right

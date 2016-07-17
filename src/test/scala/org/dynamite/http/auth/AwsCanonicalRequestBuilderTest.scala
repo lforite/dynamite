@@ -1,10 +1,10 @@
 package org.dynamite.http.auth
 
-import org.dynamite.dsl.DateStamp
+import org.dynamite.dsl.DateTimeStamp
 import org.dynamite.http.{AmazonDateHeader, ContentTypeHeader, HostHeader}
 import org.specs2.mutable.Specification
 
-class AwsCanonicalRequestCreatorTest extends Specification { override def is = s2"""
+class AwsCanonicalRequestBuilderTest extends Specification { override def is = s2"""
       Specifications for the Canonical request creator
         Creating a canonical request with AWS example should yield the expected value $createCanonicalRequest
    """.stripMargin
@@ -18,7 +18,7 @@ class AwsCanonicalRequestCreatorTest extends Specification { override def is = s
       headers = List(
         ContentTypeHeader("application/x-www-form-urlencoded; charset=utf-8"),
         HostHeader("iam.amazonaws.com"),
-        AmazonDateHeader(DateStamp("20150830T123600Z"))),
+        AmazonDateHeader(DateTimeStamp("20150830T123600Z"))),
       ""
     ) fold(
       err => ko("The canonical request creation should succeed"),
@@ -26,6 +26,6 @@ class AwsCanonicalRequestCreatorTest extends Specification { override def is = s
       )
   }
 
-  private[this] object Dummy extends AwsCanonicalRequestCreator
+  private[this] object Dummy extends AwsCanonicalRequestBuilder
 
 }

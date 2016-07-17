@@ -1,6 +1,6 @@
 package org.dynamite.http
 
-import org.dynamite.dsl.{AwsAuthorization, DateStamp}
+import org.dynamite.dsl.{AwsAuthorization, AwsDate, AwsDate$, DateTimeStamp}
 
 trait HttpHeader {
   def render: (String, String)
@@ -19,8 +19,8 @@ case class AuthorizationHeader(value: AwsAuthorization) extends HttpHeader {
   def render = "Authorization" -> s"AWS4-HMAC-SHA256 Credential=${value.credential}, SignedHeaders=content-type;host;x-amz-date, Signature=${value.signature}"
 }
 
-case class AmazonDateHeader(dateStamp: DateStamp) extends HttpHeader {
-  def render = "X-Amz-Date" -> dateStamp.value
+case class AmazonDateHeader(dateTimeStamp: DateTimeStamp) extends HttpHeader {
+  def render = "X-Amz-Date" -> dateTimeStamp.value
 }
 
 case class AmazonTargetHeader(value: String) extends HttpHeader {
