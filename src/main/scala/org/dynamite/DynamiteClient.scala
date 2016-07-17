@@ -10,7 +10,7 @@ import org.dynamite.ast.{AwsJsonReader, AwsJsonWriter}
 import org.dynamite.dsl.GetItemRequest.toJson
 import org.dynamite.dsl._
 import org.dynamite.http._
-import org.dynamite.http.auth.AwsRequestSigner
+import org.dynamite.http.auth.AwsSignatureBuilder
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods._
 
@@ -35,7 +35,7 @@ case class DynamiteClient[A](
   extends DynamoClient[A]
     with AwsJsonWriter
     with AwsJsonReader
-    with AwsRequestSigner
+    with AwsSignatureBuilder
     with RequestExtractor
     with RequestParser {
 
@@ -51,7 +51,7 @@ case class DynamiteClient[A](
       dateStamp <- AwsDate(LocalDateTime.now()).right
       auth <- sign(credentials, dateStamp.date, AwsRegion("eu-west-1"), AwsService("dynamodb"))
       headers <- (
-        AuthorizationHeader(auth) ::
+        AuthorizationHeader(AwsAuthorization("", "")) ::
           AmazonDateHeader(dateStamp.dateTime) ::
           HostHeader(configuration.host) ::
           getHeaders

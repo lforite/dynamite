@@ -3,7 +3,7 @@ package org.dynamite.http.auth
 import org.dynamite.dsl._
 import org.specs2.mutable.Specification
 
-class AwsRequestSignerTest extends Specification { override def is = s2""""
+class AwsSignatureBuilderTest extends Specification { override def is = s2""""
       Specifications for the AwsRequestSigner
         AwsRequestSigner should sign a request correctly $sign
       """"
@@ -17,9 +17,9 @@ class AwsRequestSignerTest extends Specification { override def is = s2""""
 
     Dummy.sign(credentials, dateStamp, regionName, serviceName) fold(
       s => ko,
-      auth => auth.signature must be_==("f4780e2d9f65fa895f9c67b32ce1baf0b0d8a43505a000a1a9e090d414db404d")
+      succ => succ.value must be_==("f4780e2d9f65fa895f9c67b32ce1baf0b0d8a43505a000a1a9e090d414db404d")
       )
   }
 
-  private[this] object Dummy extends AwsRequestSigner
+  private[this] object Dummy extends AwsSignatureBuilder
 }

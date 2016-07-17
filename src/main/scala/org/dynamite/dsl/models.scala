@@ -29,3 +29,9 @@ case class AwsService(value: String)
 case class ClientConfiguration(host: String, table: String)
 
 case class AwsAuthorization(credential: String, signature: String)
+
+case class AwsSignature(value: String)
+
+case class AwsStringToSign(value: String)
+
+case class AwsCanonicalRequest(value: String)
