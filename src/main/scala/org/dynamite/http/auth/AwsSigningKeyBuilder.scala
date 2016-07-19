@@ -84,30 +84,41 @@ trait AwsStringToSignBuilder
 
 }
 
-/** AWS Signature V$ third part of the signing protocol; more details at
+/** AWS Signature V4 third part of the signing protocol; more details at
   * http://docs.aws.amazon.com/general/latest/gr/sigv4-create-string-to-sign.html */
-trait AwsSignatureBuilder
+trait AwsSigningKeyBuilder
   extends HexFormatter
     with HashFunctions {
-  protected[dynamite] def sign(
+  protected[dynamite] def derive(
     credentials: AwsCredentials,
     dateStamp: DateStamp,
     region: AwsRegion,
-    service: AwsService): SigningError \/ AwsSignature =
+    service: AwsService): SigningError \/ AwsSigningKey =
     for {
       signature <- encode(credentials.secretKey, dateStamp, region, service)
-    } yield AwsSignature(signature)
+    } yield AwsSigningKey(signature)
 
   private def encode(
     key: AwsSecretKey,
     dateStamp: DateStamp,
     region: AwsRegion,
-    service: AwsService): SigningError \/ String =
+    service: AwsService): SigningError \/ Array[Byte] =
     for {
-      kSecret <- ("AWS4" + key.value).getBytes("UTF8").right
+      kSecret <- ("AWS4" + key.value).getBytes("UTF-8").right
       kDate <- hmacSha256(dateStamp.value, kSecret)
       kRegion <- hmacSha256(region.value, kDate)
       kService <- hmacSha256(service.value, kRegion)
-      result <- hmacSha256("aws4_request", kService) map toHexFormat
+      result <- hmacSha256("aws4_request", kService)
     } yield result
+}
+
+/** AWS Signature V4 final step of the signing protocol */
+trait AwsSignatureBuilder extends HashFunctions with HexFormatter{
+  protected[dynamite] def sign(
+    signingKey: AwsSigningKey,
+    stringToSign: AwsStringToSign): SigningError \/ AwsSignature = {
+    for {
+      signature <- hmacSha256(stringToSign.value, signingKey.value) map toHexFormat
+    } yield AwsSignature(signature)
+  }
 }
