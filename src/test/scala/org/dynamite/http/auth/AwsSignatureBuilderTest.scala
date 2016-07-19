@@ -3,9 +3,7 @@ package org.dynamite.http.auth
 import org.dynamite.dsl.{AwsScope, AwsSigningKey, AwsStringToSign}
 import org.specs2.Specification
 
-class AwsSignatureBuilderTest extends Specification {
-  override def is =
-    s2"""
+class AwsSignatureBuilderTest extends Specification { override def is = s2"""
       Specifications for the SignatureBuilder
         The request should be signed directly given the example by Amazon $correctlySigned
     """

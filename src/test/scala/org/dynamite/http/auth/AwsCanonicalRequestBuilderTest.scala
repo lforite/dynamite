@@ -2,7 +2,7 @@ package org.dynamite.http.auth
 
 import org.dynamite.dsl._
 import org.dynamite.http.{AmazonDateHeader, ContentTypeHeader, HostHeader}
-import org.specs2.mutable.Specification
+import org.specs2.Specification
 
 class AwsCanonicalRequestBuilderTest extends Specification { override def is = s2"""
       Specifications for the Canonical request creator

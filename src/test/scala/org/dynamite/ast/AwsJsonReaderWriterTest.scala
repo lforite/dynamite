@@ -8,7 +8,7 @@ import org.specs2._
 class AwsJsonReaderWriterTest extends Specification with ScalaCheck { def is = s2"""
   The specifications to ensure that AwsJsonReader.fromAws and AwsJsonWriter.toAws are correct
     Augmenting some json to AWS format and shrinking it back should yield the original json $jsonToAwsFromAws
- """"
+ """
 
   def jsonToAwsFromAws = prop { jsonObject: JObject =>
     val json = compact(render(jsonObject))

@@ -1,12 +1,12 @@
 package org.dynamite.http.auth
 
 import org.dynamite.dsl._
-import org.specs2.mutable.Specification
+import org.specs2.Specification
 
-class AwsSigningKeyBuilderTest extends Specification { override def is = s2""""
+class AwsSigningKeyBuilderTest extends Specification { override def is = s2"""
       Specifications for the AwsRequestSigner
         AwsRequestSigner should sign a request correctly $sign
-      """"
+    """
 
   /** According to http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html */
   def sign = {
