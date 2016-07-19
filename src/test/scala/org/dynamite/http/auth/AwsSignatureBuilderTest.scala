@@ -1,6 +1,6 @@
 package org.dynamite.http.auth
 
-import org.dynamite.dsl.{AwsSigningKey, AwsStringToSign}
+import org.dynamite.dsl.{AwsScope, AwsSigningKey, AwsStringToSign}
 import org.specs2.Specification
 
 class AwsSignatureBuilderTest extends Specification {
@@ -17,7 +17,8 @@ class AwsSignatureBuilderTest extends Specification {
         "AWS4-HMAC-SHA256\n" +
           "20150830T123600Z\n" +
           "20150830/us-east-1/iam/aws4_request\n" +
-          "f536975d06c0309214f805bb90ccff089219ecd68b2577efef23edd43b7e1a59")) fold(
+          "f536975d06c0309214f805bb90ccff089219ecd68b2577efef23edd43b7e1a59",
+          AwsScope("20150830/us-east-1/iam/aws4_request"))) fold(
       err => ko("The signing should not yield an error"),
       succ => succ.value must be_==("5d672d79c15b13162d9279b0855cfba6789a8edb4c82c400e06b5924a6f2b5d7")
       )

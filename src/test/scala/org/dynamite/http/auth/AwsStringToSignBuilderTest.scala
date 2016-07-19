@@ -22,10 +22,17 @@ class AwsStringToSignBuilderTest extends Specification { override def is = s2"""
         "content-type:application/x-www-form-urlencoded; charset=utf-8\n" +
         "host:iam.amazonaws.com\nx-amz-date:20150830T123600Z\n\n" +
         "content-type;host;x-amz-date\n" +
-        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        AwsSignedHeaders("content-type;host;x-amz-date"))
     ) fold (
       err => ko("The method should be succeeding"),
-      succ => succ must be_==(AwsStringToSign("AWS4-HMAC-SHA256\n20150830T123600Z\n20150830/us-east-1/iam/aws4_request\nf536975d06c0309214f805bb90ccff089219ecd68b2577efef23edd43b7e1a59"))
+      succ => succ must be_==(
+        AwsStringToSign(
+          "AWS4-HMAC-SHA256\n" +
+            "20150830T123600Z\n" +
+            "20150830/us-east-1/iam/aws4_request\n" +
+            "f536975d06c0309214f805bb90ccff089219ecd68b2577efef23edd43b7e1a59",
+          AwsScope("20150830/us-east-1/iam/aws4_request")))
       )
   }
 

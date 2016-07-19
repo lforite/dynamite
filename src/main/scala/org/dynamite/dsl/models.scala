@@ -32,8 +32,22 @@ case class AwsAuthorization(credential: String, signature: String)
 
 case class AwsSigningKey(value: Array[Byte])
 
-case class AwsStringToSign(value: String)
+case class AwsStringToSign(value: String, scope: AwsScope)
 
-case class AwsCanonicalRequest(value: String)
+case class AwsScope(value: String)
+
+case class AwsCanonicalRequest(value: String, signedHeaders: AwsSignedHeaders)
 
 case class AwsSignature(value: String)
+
+case class HttpMethod(value: String)
+
+case class Uri(value: String)
+
+case class RequestBody(value: String)
+
+case class AwsSigningHeaders(signingCredentials: AwsSigningCredentials, signedHeaders: AwsSignedHeaders, awsSignature: AwsSignature)
+
+case class AwsSigningCredentials(value: String)
+
+case class AwsSignedHeaders(value: String)
