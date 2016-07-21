@@ -1,5 +1,7 @@
 package org.dynamite.dsl
 
+import javax.crypto.spec.SecretKeySpec
+
 /** more info at http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/CommonErrors.html */
 sealed trait DynamoError
 case class BasicDynamoError() extends DynamoError
@@ -21,3 +23,9 @@ case object Throttling extends DynamoError
 case object ValidationError extends DynamoError
 
 case class SigningError(error: String) extends DynamoError
+
+sealed trait HashingError
+case class EncodingNotFoundError(encoding: String) extends HashingError
+case class AlgorithmNotFoundError(algorithm: String) extends HashingError
+case class InvalidSecretKeyError(key: SecretKeySpec) extends HashingError
+case object NotInitializedMacError extends HashingError

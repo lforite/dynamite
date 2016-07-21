@@ -4,24 +4,33 @@ import java.security.MessageDigest
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
-import org.dynamite.dsl.SigningError
+import org.dynamite.dsl._
 
-import scalaz.\/
 import scalaz.Scalaz._
+import scalaz.\/
 
 trait HashFunctions {
-  protected[dynamite] def hmacSha256(data: String, key: Array[Byte]): SigningError \/ Array[Byte] =
-    (for {
+  protected[dynamite] def hmacSha256(toEncode: String, key: Array[Byte]): HashingError \/ Array[Byte] =
+    for {
       algorithm <- "HmacSHA256".right
-      mac <- \/.fromTryCatchThrowable[Mac, Throwable](Mac.getInstance(algorithm))
-      _ <- \/.fromTryCatchThrowable[Unit, Throwable](mac.init(new SecretKeySpec(key, algorithm)))
-      result <- \/.fromTryCatchThrowable[Array[Byte], Throwable](mac.doFinal(data.getBytes("UTF-8")))
-    } yield result).leftMap(t => SigningError("Oooooppsssss something wrong occurred"))
+      dataBytes <- getBytes(toEncode)
+      secretKey <- new SecretKeySpec(key, algorithm).right
+      mac <- \/.fromTryCatchThrowable[Mac, Throwable](Mac.getInstance(algorithm)) leftMap (t => AlgorithmNotFoundError(algorithm))
+      _ <- \/.fromTryCatchThrowable[Unit, Throwable](mac.init(secretKey)) leftMap (t => InvalidSecretKeyError(secretKey))
+      result <- \/.fromTryCatchThrowable[Array[Byte], Throwable](mac.doFinal(dataBytes)) leftMap (t => NotInitializedMacError)
+    } yield result
 
-  protected[dynamite] def sha256(toEncode: String): SigningError \/ Array[Byte] =
-    (for {
-      messageDigest <- \/.fromTryCatchThrowable[MessageDigest, Throwable](MessageDigest.getInstance("SHA-256"))
-      _ <- \/.fromTryCatchThrowable[Unit, Throwable](messageDigest.update(toEncode.getBytes("UTF-8")))
-      result <- \/.fromTryCatchThrowable[Array[Byte], Throwable](messageDigest.digest())
-    } yield result) leftMap { t => SigningError("Oooooppsssss something wrong occurred") }
+  protected[dynamite] def sha256(toEncode: String): HashingError \/ Array[Byte] =
+    for {
+      algorithm <- "SHA-256".right
+      messageDigest <- \/.fromTryCatchThrowable[MessageDigest, Throwable](MessageDigest.getInstance(algorithm)) leftMap (t => AlgorithmNotFoundError(algorithm))
+      toEncodeBytes <- getBytes(toEncode)
+      _ <- messageDigest.update(toEncodeBytes).right
+      result <- messageDigest.digest().right
+    } yield result
+
+
+  private def getBytes(toConvert: String): EncodingNotFoundError \/ Array[Byte] = {
+    \/.fromTryCatchThrowable[Array[Byte], Throwable](toConvert.getBytes("UTF-8")) leftMap (t => EncodingNotFoundError("UTF-8"))
+  }
 }

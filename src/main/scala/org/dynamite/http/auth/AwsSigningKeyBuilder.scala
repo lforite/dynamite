@@ -20,7 +20,7 @@ trait AwsCanonicalRequestBuilder
     queryParameters: List[(String, List[String])],
     headers: List[HttpHeader],
     requestBody: RequestBody): SigningError \/ AwsCanonicalRequest = {
-    for {
+    (for {
       canonicalHttpMethod <- httpMethod.value.right
       canonicalUri <- toCanonicalUri(uri).right
       canonicalQueryParameters <- toCanonicalQueryParameters(queryParameters).right
@@ -34,7 +34,7 @@ trait AwsCanonicalRequestBuilder
         canonicalHeaders + "\n" +
         canonicalSignedHeader.value + "\n" +
         hashedRequestBody,
-      canonicalSignedHeader)
+      canonicalSignedHeader)) leftMap (he => SigningError(s"Unexpected error occurred while signing the request, $he"))
   }
 
   private def toCanonicalUri(uri: Uri): String = uri.value
@@ -73,7 +73,7 @@ trait AwsStringToSignBuilder
     region: AwsRegion,
     service: AwsService,
     canonicalRequest: AwsCanonicalRequest): SigningError \/ AwsStringToSign = {
-    for {
+    (for {
       algorithm <- "AWS4-HMAC-SHA256".right
       date <- awsDate.dateTime.value.right
       scope <- s"${awsDate.date.value}/${region.value}/${service.value}/aws4_request".right
@@ -83,7 +83,7 @@ trait AwsStringToSignBuilder
         date + '\n' +
         scope + '\n' +
         hashedCanonicalRequest,
-      AwsScope(scope))
+      AwsScope(scope))) leftMap (he => SigningError(s"Unexpected error occurred while signing the request, $he"))
   }
 
 }
@@ -107,13 +107,13 @@ trait AwsSigningKeyBuilder
     dateStamp: DateStamp,
     region: AwsRegion,
     service: AwsService): SigningError \/ Array[Byte] =
-    for {
+    (for {
       kSecret <- ("AWS4" + key.value).getBytes("UTF-8").right
       kDate <- hmacSha256(dateStamp.value, kSecret)
       kRegion <- hmacSha256(region.value, kDate)
       kService <- hmacSha256(service.value, kRegion)
       result <- hmacSha256("aws4_request", kService)
-    } yield result
+    } yield result) leftMap (he => SigningError(s"Unexpected error occurred while signing the request, $he"))
 }
 
 /** AWS Signature V4 final step of the signing protocol */
@@ -121,9 +121,9 @@ trait AwsSignatureBuilder extends HashFunctions with HexFormatter {
   protected[dynamite] def sign(
     signingKey: AwsSigningKey,
     stringToSign: AwsStringToSign): SigningError \/ AwsSignature = {
-    for {
+    (for {
       signature <- hmacSha256(stringToSign.value, signingKey.value) map toHexFormat
-    } yield AwsSignature(signature)
+    } yield AwsSignature(signature)) leftMap (he => SigningError(s"Unexpected error occurred while signing the request, $he"))
   }
 }
 
