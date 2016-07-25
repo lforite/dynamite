@@ -14,7 +14,7 @@ class AwsStringToSignBuilderTest extends Specification { override def is = s2"""
   def stringToSignOk = {
     Dummy.stringToSign(
       AwsDate(LocalDateTime.of(2015, 8, 30, 12, 36, 0)),
-      AwsRegion("us-east-1"),
+      AwsRegion.US_EAST_1,
       AwsService("iam"),
       AwsCanonicalRequest("GET\n" +
         "/\n" +

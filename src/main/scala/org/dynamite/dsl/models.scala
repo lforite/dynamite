@@ -22,11 +22,83 @@ object AwsDate {
   private lazy val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(ZoneId.of("UTC"))
 }
 
-case class AwsRegion(value: String)
+sealed trait AwsRegion {
+  val name: String
+  val endpoint: String
+}
+
+object AwsRegion {
+
+  /** US East (N. Virginia) */
+  case object US_EAST_1 extends AwsRegion {
+    val name = "us-east-1"
+    val endpoint = "dynamodb.us-east-1.amazonaws.com"
+  }
+
+  /** US West (N. California) */
+  case object US_WEST_1 extends AwsRegion {
+    val name = "us-west-1"
+    val endpoint = "dynamodb.us-west-1.amazonaws.com"
+  }
+
+  /** US West (Oregon) */
+  case object US_WEST_2 extends AwsRegion {
+    val name = "us-west-2"
+    val endpoint = "dynamodb.us-west-2.amazonaws.com"
+  }
+
+  /** EU (Ireland) */
+  case object EU_WEST_1 extends AwsRegion {
+    val name = "eu-west-1"
+    val endpoint = "dynamodb.eu-west-1.amazonaws.com"
+  }
+
+  /** EU (Frankfurt) */
+  case object EU_CENTRAL_1 extends AwsRegion {
+    val name = "eu-central-1"
+    val endpoint = "dynamodb.eu-central-1.amazonaws.com"
+  }
+
+  /** Asia Pacific (Mumbai) */
+  case object AP_SOUTH_1 extends AwsRegion {
+    val name = "ap-south-1"
+    val endpoint = "dynamodb.ap-south-1.amazonaws.com"
+  }
+
+  /** Asia Pacific (Singapore) */
+  case object AP_SOUTHEAST_1 extends AwsRegion {
+    val name = "ap-southeast-1"
+    val endpoint = "dynamodb.ap-southeast-1.amazonaws.com"
+  }
+
+  /** Asia Pacific (Sydney)	 */
+  case object AP_SOUTHEAST_2 extends AwsRegion {
+    val name = "ap-southeast-2"
+    val endpoint = "dynamodb.ap-southeast-2.amazonaws.com"
+  }
+
+  /** Asia Pacific (Tokyo) */
+  case object AP_NORTHEAST_1 extends AwsRegion {
+    val name = "ap-northeast-1"
+    val endpoint = "dynamodb.ap-northeast-1.amazonaws.com"
+  }
+
+  /** Asia Pacific (Seoul) */
+  case object AP_NORTHEAST_2 extends AwsRegion {
+    val name = "ap-northeast-2"
+    val endpoint = "dynamodb.ap-northeast-2.amazonaws.com"
+  }
+
+  /** South America (São Paulo) */
+  case object SA_EAST_1 extends AwsRegion {
+    val name = "sa-east-1"
+    val endpoint = "dynamodb.sa-east-1.amazonaws.com"
+  }
+}
 
 case class AwsService(value: String)
 
-case class ClientConfiguration(host: String, table: String)
+case class ClientConfiguration(host: String, table: String, awsRegion: AwsRegion)
 
 case class AwsAuthorization(credential: String, signature: String)
 

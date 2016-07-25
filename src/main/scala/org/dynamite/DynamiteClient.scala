@@ -1,7 +1,6 @@
 package org.dynamite
 
-import java.time.LocalDateTime
-import java.util.Date
+import java.time.{ZoneOffset, ZonedDateTime}
 
 import com.ning.http.client.Response
 import dispatch.Defaults._
@@ -10,10 +9,11 @@ import org.dynamite.ast.{AwsJsonReader, AwsJsonWriter}
 import org.dynamite.dsl.GetItemRequest.toJson
 import org.dynamite.dsl._
 import org.dynamite.http._
-import org.dynamite.http.auth.AwsSigningKeyBuilder
+import org.dynamite.http.auth.AwsRequestSigner
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods._
 
+import scala.collection.immutable.Map
 import scala.concurrent.Future
 import scalaz.Scalaz._
 import scalaz.{EitherT, \/}
@@ -35,9 +35,9 @@ case class DynamiteClient[A](
   extends DynamoClient[A]
     with AwsJsonWriter
     with AwsJsonReader
-    with AwsSigningKeyBuilder
-    with RequestExtractor
-    with RequestParser {
+    with AwsRequestSigner
+    with RequestParser
+    with RequestExtractor {
 
   implicit private val formats = DefaultFormats
 
@@ -48,25 +48,31 @@ case class DynamiteClient[A](
 
   override def get(id: String): DynamoAction[Option[A]] = {
     val request: DynamoError \/ Req = for {
-      dateStamp <- AwsDate(LocalDateTime.now()).right
-      auth <- derive(credentials, dateStamp.date, AwsRegion("eu-west-1"), AwsService("dynamodb"))
+      dateStamp <- AwsDate(ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime).right
+      getItemRequest <- GetItemRequest(key = Map("id" -> Map("S" -> id)), table = configuration.table).right
+      json <- compact(render(toJson(getItemRequest))).right
       headers <- (
-        AuthorizationHeader(AwsAuthorization("", "")) ::
-          AmazonDateHeader(dateStamp.dateTime) ::
+        AmazonDateHeader(dateStamp.dateTime) ::
           HostHeader(configuration.host) ::
-          getHeaders
-        ).map(_.render).toMap.right
-      request <- GetItemRequest(key = Map("id" -> Map("S" -> id)), table = configuration.table).right
-      json <- compact(render(toJson(request))).right
-      req <- (url(configuration.host) << json <:< headers).right
+          getHeaders).right
+      signingHeaders <- signRequest(
+        httpMethod = HttpMethod("POST"),
+        uri = Uri("/"),
+        queryParameters = List(),
+        headers = headers,
+        requestBody = RequestBody(json),
+        awsDate = dateStamp,
+        awsRegion = configuration.awsRegion,
+        awsService = AwsService("dynamodb"),
+        awsCredentials = credentials)
+      signedHeaders <- (AuthorizationHeader(signingHeaders) :: headers).map(_.render).right
+      req <- (host(configuration.host).secure << json <:< signedHeaders).right
     } yield req
 
     EitherT.fromDisjunction[Future](request) flatMap { req =>
       EitherT.fromEither(Http(req).either).leftMap(e => {
-        println(e)
         BasicDynamoError()
-      }
-      )
+      })
     } flatMapF { r =>
       Future(handleResponse(r))
     } toEither

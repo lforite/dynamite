@@ -22,7 +22,7 @@ class AwsRequestSignerTest extends Specification { override def is = s2"""
         AmazonDateHeader(DateTimeStamp("20150830T123600Z"))),
       RequestBody(""),
       AwsDate(LocalDateTime.of(2015, 8, 30, 12, 36, 0)),
-      AwsRegion("us-east-1"),
+      AwsRegion.US_EAST_1,
       AwsService("iam"),
       AwsCredentials(
         AwsAccessKey("AKIDEXAMPLE"),

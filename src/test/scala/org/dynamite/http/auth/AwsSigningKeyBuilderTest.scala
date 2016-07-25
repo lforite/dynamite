@@ -12,7 +12,7 @@ class AwsSigningKeyBuilderTest extends Specification { override def is = s2"""
   def sign = {
     val secretKey = AwsSecretKey("wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY")
     val dateStamp = DateStamp("20120215")
-    val regionName = AwsRegion("us-east-1")
+    val regionName = AwsRegion.US_EAST_1
     val serviceName = AwsService("iam")
     val credentials = AwsCredentials(AwsAccessKey("anyAccessKey"), secretKey)
 

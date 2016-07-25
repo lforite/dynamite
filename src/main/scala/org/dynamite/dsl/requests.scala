@@ -1,6 +1,5 @@
 package org.dynamite.dsl
 
-import org.dynamite.ast.AwsJsonWriter
 import org.json4s.JsonDSL._
 import org.json4s._
 
@@ -18,7 +17,7 @@ case class GetItemRequest(
   table: String
 )
 
-object GetItemRequest extends AwsJsonWriter {
+object GetItemRequest {
   def toJson(request: GetItemRequest): JValue = {
     ("Attributes" -> request.attributes) ~
       ("ConsistentRead" -> request.consistentRead) ~
