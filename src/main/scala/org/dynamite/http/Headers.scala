@@ -1,6 +1,6 @@
 package org.dynamite.http
 
-import org.dynamite.dsl.{AwsAuthorization, AwsSigningHeaders, DateTimeStamp}
+import org.dynamite.dsl.{AwsSigningHeaders, DateTimeStamp}
 
 trait HttpHeader {
   def render: (String, String)

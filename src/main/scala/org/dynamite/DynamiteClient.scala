@@ -50,7 +50,7 @@ case class DynamiteClient[A](
     val request: DynamoError \/ Req = for {
       dateStamp <- AwsDate(ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime).right
       getItemRequest <- GetItemRequest(key = Map("id" -> Map("S" -> id)), table = configuration.table).right
-      json <- compact(render(toJson(getItemRequest))).right
+      json <- \/.fromTryCatchThrowable[String, Throwable](compact(render(toJson(getItemRequest)))) leftMap(e => BasicDynamoError())
       headers <- (
         AmazonDateHeader(dateStamp.dateTime) ::
           HostHeader(configuration.host) ::
