@@ -112,7 +112,12 @@ case class AwsCanonicalRequest(value: String, signedHeaders: AwsSignedHeaders)
 
 case class AwsSignature(value: String)
 
-case class HttpMethod(value: String)
+
+sealed trait HttpMethod { val value: String}
+object HttpMethod {
+  case object POST extends HttpMethod { val value = "POST" }
+  case object GET extends HttpMethod { val value = "GET" }
+}
 
 case class Uri(value: String)
 

@@ -1,5 +1,7 @@
 package org.dynamite.dsl
 
+import org.dynamite.ast.AwsScalarType
+import org.json4s.Extraction.decompose
 import org.json4s.JsonDSL._
 import org.json4s._
 
@@ -11,18 +13,17 @@ case class GetItemRequest(
   attributes: List[String] = List(),
   consistentRead: Boolean = false,
   expressionAttributeNames: Option[Map[String, String]] = None,
-  key: Map[String, Map[String, String]],
+  key: List[(String, AwsScalarType)],
   projection: Option[String] = None,
   returnConsumedCapacity: Option[String] = None,
-  table: String
-)
+  table: String)
 
 object GetItemRequest {
-  def toJson(request: GetItemRequest): JValue = {
+  def toJson(request: GetItemRequest)(implicit formats: Formats): JValue = {
     ("Attributes" -> request.attributes) ~
       ("ConsistentRead" -> request.consistentRead) ~
       ("ExpressionAttributeNames" -> request.expressionAttributeNames) ~
-      ("Key" -> request.key) ~
+      ("Key" -> request.key.map(k => (k._1, decompose(k._2)))) ~
       ("ProjectionExpression" -> request.projection) ~
       ("ReturnConsumedCapacity" -> request.returnConsumedCapacity) ~
       ("TableName" -> request.table)

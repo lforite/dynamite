@@ -13,7 +13,7 @@ class AwsRequestSignerTest extends Specification { override def is = s2"""
 
   def signRequest = {
     Dummy.signRequest(
-      HttpMethod("GET"),
+      HttpMethod.GET,
       Uri("/"),
       List("Action" -> List("ListUsers"), "Version" -> List("2010-05-08")),
       headers = List(
