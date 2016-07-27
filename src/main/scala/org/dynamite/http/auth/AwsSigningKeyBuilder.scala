@@ -76,7 +76,7 @@ trait AwsStringToSignBuilder
     (for {
       algorithm <- "AWS4-HMAC-SHA256".right
       date <- awsDate.dateTime.value.right
-      scope <- s"${awsDate.date.value}/${region.name}/${service.value}/aws4_request".right
+      scope <- s"${awsDate.date.value}/${region.name.value}/${service.value}/aws4_request".right
       hashedCanonicalRequest <- sha256(canonicalRequest.value) map toHexFormat
     } yield AwsStringToSign(
       algorithm + '\n' +
@@ -110,7 +110,7 @@ trait AwsSigningKeyBuilder
     (for {
       kSecret <- ("AWS4" + key.value).getBytes("UTF-8").right
       kDate <- hmacSha256(dateStamp.value, kSecret)
-      kRegion <- hmacSha256(region.name, kDate)
+      kRegion <- hmacSha256(region.name.value, kDate)
       kService <- hmacSha256(service.value, kRegion)
       result <- hmacSha256("aws4_request", kService)
     } yield result) leftMap (he => SigningError(s"Unexpected error occurred while signing the request, $he"))

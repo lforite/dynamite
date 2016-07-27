@@ -1,6 +1,6 @@
 package org.dynamite.http
 
-import org.dynamite.dsl.{AwsSigningHeaders, DateTimeStamp}
+import org.dynamite.dsl.{AwsHost, AwsSigningHeaders, DateTimeStamp}
 
 trait HttpHeader {
   def render: (String, String)
@@ -27,6 +27,6 @@ case class AmazonTargetHeader(value: String) extends HttpHeader {
   def render = "X-Amz-Target" -> value
 }
 
-case class HostHeader(value: String) extends HttpHeader {
-  def render = "host" -> value
+case class HostHeader(value: AwsHost) extends HttpHeader {
+  def render = "host" -> value.value
 }

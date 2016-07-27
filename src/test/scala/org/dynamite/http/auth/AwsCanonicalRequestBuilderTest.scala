@@ -17,7 +17,7 @@ class AwsCanonicalRequestBuilderTest extends Specification { override def is = s
       queryParameters = List("Action" -> List("ListUsers"), "Version" -> List("2010-05-08")),
       headers = List(
         ContentTypeHeader("application/x-www-form-urlencoded; charset=utf-8"),
-        HostHeader("iam.amazonaws.com"),
+        HostHeader(AwsHost("iam.amazonaws.com")),
         AmazonDateHeader(DateTimeStamp("20150830T123600Z"))),
       RequestBody("")
     ) fold(

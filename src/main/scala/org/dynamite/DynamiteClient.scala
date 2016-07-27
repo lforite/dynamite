@@ -50,6 +50,7 @@ case class DynamiteClient[A](
     sortKey: Option[(String, AwsScalarType)] = None): DynamoAction[Option[A]] = {
 
     val request: DynamoError \/ Req = for {
+      awsHost <- configuration.host.getOrElse(configuration.awsRegion.endpoint).right
       dateStamp <- AwsDate(ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime).right
       getItemRequest <- GetItemRequest(
         key = (Some(primaryKey) :: sortKey :: Nil).flatten,
@@ -57,7 +58,7 @@ case class DynamiteClient[A](
       json <- \/.fromTryCatchThrowable[String, Throwable](compact(render(toJson(getItemRequest)))) leftMap (e => BasicDynamoError())
       headers <- (
         AmazonDateHeader(dateStamp.dateTime) ::
-          HostHeader(configuration.host) ::
+          HostHeader(awsHost) ::
           getHeaders).right
       signingHeaders <- signRequest(
         httpMethod = HttpMethod.POST,
@@ -70,7 +71,7 @@ case class DynamiteClient[A](
         awsService = AwsService("dynamodb"),
         awsCredentials = credentials)
       signedHeaders <- (AuthorizationHeader(signingHeaders) :: headers).map(_.render).right
-      req <- (host(configuration.host).secure << json <:< signedHeaders).right
+      req <- (host(awsHost.value).secure << json <:< signedHeaders).right
     } yield req
 
     EitherT.fromDisjunction[Future](request) flatMap { req =>

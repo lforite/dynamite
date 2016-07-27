@@ -13,7 +13,7 @@ class GetItemRequestTest extends Specification { override def is = s2"""
   def toJson = {
     GetItemRequest.toJson(GetItemRequest(
       key = List("id" -> S("123")),
-      table = "test")
+      table = AwsTable("test"))
     )(DefaultFormats + new AwsTypeSerializer) must be_==(
       JObject(
         "Attributes" -> JArray(Nil),

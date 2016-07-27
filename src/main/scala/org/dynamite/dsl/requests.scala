@@ -16,7 +16,7 @@ case class GetItemRequest(
   key: List[(String, AwsScalarType)],
   projection: Option[String] = None,
   returnConsumedCapacity: Option[String] = None,
-  table: String)
+  table: AwsTable)
 
 object GetItemRequest {
   def toJson(request: GetItemRequest)(implicit formats: Formats): JValue = {
@@ -26,7 +26,7 @@ object GetItemRequest {
       ("Key" -> request.key.map(k => (k._1, decompose(k._2)))) ~
       ("ProjectionExpression" -> request.projection) ~
       ("ReturnConsumedCapacity" -> request.returnConsumedCapacity) ~
-      ("TableName" -> request.table)
+      ("TableName" -> request.table.value)
   }
 }
 
