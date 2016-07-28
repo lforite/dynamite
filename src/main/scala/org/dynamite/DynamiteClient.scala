@@ -6,7 +6,6 @@ import com.ning.http.client.Response
 import dispatch.Defaults._
 import dispatch._
 import org.dynamite.ast.{AwsJsonReader, AwsJsonWriter, AwsScalarType, AwsTypeSerializer}
-import org.dynamite.dsl.GetItemRequest.toJson
 import org.dynamite.dsl._
 import org.dynamite.http._
 import org.dynamite.http.auth.AwsRequestSigner
@@ -36,7 +35,8 @@ case class DynamiteClient[A](
     with AwsJsonReader
     with AwsRequestSigner
     with RequestParser
-    with RequestExtractor {
+    with RequestExtractor
+    with HttpClient {
 
   implicit private val formats = DefaultFormats + new AwsTypeSerializer
 
@@ -55,7 +55,7 @@ case class DynamiteClient[A](
       getItemRequest <- GetItemRequest(
         key = (Some(primaryKey) :: sortKey :: Nil).flatten,
         table = configuration.table).right
-      json <- \/.fromTryCatchThrowable[String, Throwable](compact(render(toJson(getItemRequest)))) leftMap (e => BasicDynamoError())
+      requestBody <- toRequestBody(getItemRequest)
       headers <- (
         AmazonDateHeader(dateStamp.dateTime) ::
           HostHeader(awsHost) ::
@@ -65,20 +65,28 @@ case class DynamiteClient[A](
         uri = Uri("/"),
         queryParameters = List(),
         headers = headers,
-        requestBody = RequestBody(json),
+        requestBody = requestBody,
         awsDate = dateStamp,
         awsRegion = configuration.awsRegion,
         awsService = AwsService("dynamodb"),
         awsCredentials = credentials)
       signedHeaders <- (AuthorizationHeader(signingHeaders) :: headers).map(_.render).right
-      req <- (host(awsHost.value).secure << json <:< signedHeaders).right
+      req <- (host(awsHost.value).secure << requestBody.value <:< signedHeaders).right
     } yield req
 
-    EitherT.fromDisjunction[Future](request) flatMap { req =>
-      EitherT.fromEither(Http(req).either).leftMap(e => BasicDynamoError())
+    EitherT.fromDisjunction[Future](request) flatMap {
+      httpRequest
     } flatMapF { r =>
-      Future(handleResponse(r))
+      Future.successful(handleResponse(r))
     } toEither
+  }
+
+  private def toRequestBody(getItemRequest: GetItemRequest): DynamoError \/ RequestBody = {
+    (for {
+      json <- GetItemRequest.toJson(getItemRequest).right
+      renderedJson <- render(json).right
+      body <- \/.fromTryCatchThrowable[String, Throwable](compact(renderedJson))
+    } yield RequestBody(body)) leftMap (e => BasicDynamoError())
   }
 
   private def handleResponse(res: Response): DynamoError \/ Option[A] =
