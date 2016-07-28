@@ -86,7 +86,7 @@ case class DynamiteClient[A](
       json <- GetItemRequest.toJson(getItemRequest).right
       renderedJson <- render(json).right
       body <- \/.fromTryCatchThrowable[String, Throwable](compact(renderedJson))
-    } yield RequestBody(body)) leftMap (e => BasicDynamoError())
+    } yield RequestBody(body)) leftMap (e => JsonSerialisationError)
   }
 
   private def handleResponse(res: Response): DynamoError \/ Option[A] =

@@ -5,6 +5,8 @@ import javax.crypto.spec.SecretKeySpec
 /** more info at http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/CommonErrors.html */
 sealed trait DynamoError
 case class BasicDynamoError() extends DynamoError
+case object JsonSerialisationError extends DynamoError
+
 case object IncompleteSignatureError extends DynamoError
 case object InternalFailureError extends DynamoError
 case object InvalidActionError extends DynamoError
