@@ -3,7 +3,6 @@ package org.dynamite
 import java.time.{ZoneOffset, ZonedDateTime}
 
 import com.ning.http.client.Response
-import dispatch.Defaults._
 import dispatch._
 import org.dynamite.ast.{AwsJsonReader, AwsJsonWriter, AwsScalarType, AwsTypeSerializer}
 import org.dynamite.dsl._
@@ -12,7 +11,7 @@ import org.dynamite.http.auth.AwsRequestSigner
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scalaz.Scalaz._
 import scalaz.{EitherT, \/}
 
@@ -32,7 +31,7 @@ trait DynamoClient[A] {
 
 case class DynamiteClient[A](
   configuration: ClientConfiguration,
-  credentials: AwsCredentials)(implicit m: Manifest[A])
+  credentials: AwsCredentials)(implicit m: Manifest[A], ec: ExecutionContext)
   extends DynamoClient[A]
     with AwsJsonWriter
     with AwsJsonReader
