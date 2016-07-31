@@ -20,7 +20,10 @@ trait DynamoClient[A] {
 
   type DynamoAction[B] = Future[Either[DynamoError, B]]
 
-  def get(primaryKey: (String, AwsScalarType), sortKey: Option[(String, AwsScalarType)]): DynamoAction[Option[A]]
+  def get(
+    primaryKey: (String, AwsScalarType),
+    sortKey: Option[(String, AwsScalarType)],
+    consistentRead: Boolean): DynamoAction[Option[A]]
 
   def put(a: A): DynamoAction[Boolean]
 
@@ -47,14 +50,16 @@ case class DynamiteClient[A](
 
   override def get(
     primaryKey: (String, AwsScalarType),
-    sortKey: Option[(String, AwsScalarType)] = None): DynamoAction[Option[A]] = {
+    sortKey: Option[(String, AwsScalarType)] = None,
+    consistentRead: Boolean = false): DynamoAction[Option[A]] = {
 
     val request: DynamoError \/ Req = for {
       awsHost <- configuration.host.getOrElse(configuration.awsRegion.endpoint).right
       dateStamp <- AwsDate(ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime).right
       getItemRequest <- GetItemRequest(
         key = (Some(primaryKey) :: sortKey :: Nil).flatten,
-        table = configuration.table).right
+        table = configuration.table,
+        consistentRead = consistentRead).right
       requestBody <- toRequestBody(getItemRequest)
       headers <- (
         AmazonDateHeader(dateStamp.dateTime) ::
