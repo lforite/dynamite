@@ -2,8 +2,6 @@ package org.dynamite
 
 import java.time.{ZoneOffset, ZonedDateTime}
 
-import com.ning.http.client.Response
-import dispatch._
 import org.dynamite.ast.{AwsJsonReader, AwsJsonWriter, AwsScalarType, AwsTypeSerializer}
 import org.dynamite.dsl._
 import org.dynamite.http._
@@ -22,7 +20,7 @@ trait DynamoClient[A] {
   def get(
     primaryKey: (String, AwsScalarType),
     sortKey: Option[(String, AwsScalarType)],
-    consistentRead: Boolean): DynamoAction[Option[A]]
+    consistentRead: Boolean)(implicit ec: ExecutionContext): DynamoAction[Option[A]]
 
   def put(a: A): DynamoAction[Boolean]
 
@@ -37,7 +35,6 @@ case class DynamiteClient[A](
     with AwsJsonReader
     with AwsRequestSigner
     with RequestParser
-    with RequestExtractor
     with HttpClient {
 
   implicit private val formats = DefaultFormats + new AwsTypeSerializer
@@ -50,35 +47,33 @@ case class DynamiteClient[A](
   override def get(
     primaryKey: (String, AwsScalarType),
     sortKey: Option[(String, AwsScalarType)] = None,
-    consistentRead: Boolean = false): DynamoAction[Option[A]] = {
-
-    val request: DynamoError \/ Req = for {
-      awsHost <- configuration.host.getOrElse(configuration.awsRegion.endpoint).right
-      dateStamp <- AwsDate(ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime).right
-      getItemRequest <- GetItemRequest(
-        key = (Some(primaryKey) :: sortKey :: Nil).flatten,
-        table = configuration.table,
-        consistentRead = consistentRead).right
-      requestBody <- toRequestBody(getItemRequest)
-      headers <- (
-        AmazonDateHeader(dateStamp.dateTime) ::
-          HostHeader(awsHost) ::
-          getHeaders).right
-      signingHeaders <- signRequest(
-        httpMethod = HttpMethod.POST,
-        uri = Uri("/"),
-        queryParameters = List(),
-        headers = headers,
-        requestBody = requestBody,
-        awsDate = dateStamp,
-        awsRegion = configuration.awsRegion,
-        awsService = AwsService("dynamodb"),
-        awsCredentials = credentials)
-      signedHeaders <- (AuthorizationHeader(signingHeaders) :: headers).map(_.render).right
-      req <- (host(awsHost.value).secure << requestBody.value <:< signedHeaders).right
-    } yield req
-
-    EitherT.fromDisjunction[Future](request) flatMap {
+    consistentRead: Boolean = false)(implicit ec: ExecutionContext): DynamoAction[Option[A]] = {
+    EitherT.fromDisjunction[Future] {
+      for {
+        awsHost <- configuration.host.getOrElse(configuration.awsRegion.endpoint).right
+        dateStamp <- AwsDate(ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime).right
+        headers <- (
+          AmazonDateHeader(dateStamp.dateTime) ::
+            HostHeader(awsHost) ::
+            getHeaders).right
+        getItemRequest <- GetItemRequest(
+          key = (Some(primaryKey) :: sortKey :: Nil).flatten,
+          table = configuration.table,
+          consistentRead = consistentRead).right
+        requestBody <- toRequestBody(getItemRequest)
+        signingHeaders <- signRequest(
+          httpMethod = HttpMethod.POST,
+          uri = Uri("/"),
+          queryParameters = List(),
+          headers = headers,
+          requestBody = requestBody,
+          awsDate = dateStamp,
+          awsRegion = configuration.awsRegion,
+          awsService = AwsService("dynamodb"),
+          awsCredentials = credentials)
+        signedHeaders <- (AuthorizationHeader(signingHeaders) :: headers).right
+      } yield AwsHttpRequest(awsHost, requestBody, signedHeaders)
+    } flatMap {
       httpRequest
     } flatMapF { r =>
       Future.successful(handleResponse(r))
@@ -93,11 +88,9 @@ case class DynamiteClient[A](
     } yield RequestBody(body)) leftMap (e => JsonSerialisationError)
   }
 
-  private def handleResponse(res: Response): DynamoError \/ Option[A] =
+  private def handleResponse(res: AwsHttpResponse): DynamoError \/ Option[A] =
     for {
-      responseBody <- extract(res)
-      _ <- println(responseBody).right
-      json <- parse(responseBody)
+      json <- parse(res.responseBody.value)
       getResponse <- GetItemResponse.fromJson(json).right
       transformed <- fromAws(getResponse.item).right
     } yield transformed.extractOpt[A]

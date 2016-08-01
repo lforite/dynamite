@@ -3,6 +3,8 @@ package org.dynamite.dsl
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDateTime, ZoneId}
 
+import org.dynamite.http.HttpHeader
+
 case class AwsCredentials(accessKey: AwsAccessKey, secretKey: AwsSecretKey)
 
 case class AwsAccessKey(value: String)
@@ -125,7 +127,12 @@ object HttpMethod {
 
 case class Uri(value: String)
 
+case class AwsHttpRequest(host: AwsHost, requestBody: RequestBody, signedHeaders: List[HttpHeader])
 case class RequestBody(value: String)
+
+case class AwsHttpResponse(statusCode: StatusCode, responseBody: ResponseBody)
+case class StatusCode(value: Int)
+case class ResponseBody(value: String)
 
 case class AwsSigningHeaders(signingCredentials: AwsSigningCredentials, signedHeaders: AwsSignedHeaders, awsSignature: AwsSignature)
 
