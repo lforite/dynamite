@@ -1,7 +1,6 @@
 package org.dynamite.dsl
 
 import org.dynamite.ast.{AwsScalarType, AwsTypeSerializer}
-import org.dynamite.http.{AcceptEncodingHeader, AmazonTargetHeader, ContentTypeHeader, HttpHeader}
 import org.json4s.Extraction.decompose
 import org.json4s.JsonDSL._
 import org.json4s._
@@ -15,8 +14,11 @@ case class ConsumedCapacity(capacityUnits: Int,
 )
 
 
-trait AwsOperation[REQUEST, RESPONSE, RESULT]
+trait AwsProtocol[REQUEST, RESPONSE, RESULT, A]
 
+object AwsProtocol {
+  implicit def GetItemProtocol[A] = new AwsProtocol[GetItemRequest, GetItemResponse, GetItemResult[A], A] {}
+}
 
 
 case class GetItemRequest(
@@ -31,7 +33,7 @@ case class GetItemRequest(
 object GetItemRequest {
   implicit private val formats = DefaultFormats + new AwsTypeSerializer
 
-  implicit val getItemRequestTypeClass = new JsonSerializable[GetItemRequest] with HasHeader[GetItemRequest] {
+  implicit val getItemRequestTypeClass = new JsonSerializable[GetItemRequest] {
     def serialize(getItemRequest: GetItemRequest): DynamoError \/ RequestBody = {
       (for {
         json <- GetItemRequest.toJson(getItemRequest).right
@@ -39,18 +41,7 @@ object GetItemRequest {
         body <- \/.fromTryCatchThrowable[String, Throwable](compact(renderedJson))
       } yield RequestBody(body)) leftMap (e => JsonSerialisationError)
     }
-
-    override def headers(): List[HttpHeader] = List(
-      AcceptEncodingHeader("identity"),
-      ContentTypeHeader("application/x-amz-json-1.0"),
-      AmazonTargetHeader("DynamoDB_20120810.GetItem"))
   }
-
-  //move this in the method call
-  val headers = List(
-    AcceptEncodingHeader("identity"),
-    ContentTypeHeader("application/x-amz-json-1.0"),
-    AmazonTargetHeader("DynamoDB_20120810.GetItem"))
 
   def toJson(request: GetItemRequest)(implicit formats: Formats): JValue = {
     ("Attributes" -> request.attributes) ~
@@ -66,8 +57,8 @@ object GetItemRequest {
 case class GetItemResponse(item: JValue)
 
 object GetItemResponse {
-  implicit val fromJson = new FromJson[GetItemResponse] {
-    override def fromJson(jValue: JValue): GetItemResponse =
+  implicit val fromJson = new JsonDeserializable[GetItemResponse] {
+    override def deserialize(jValue: JValue): GetItemResponse =
       GetItemResponse(jValue \ "Item")
   }
 }
@@ -77,17 +68,17 @@ case class GetItemResult[A](item: Option[A])
 trait JsonSerializable[A] {
   def serialize(a: A): DynamoError \/ RequestBody
 }
+
 object JsonSerializable {
-  //implicit class JsonSerializablePostFix
-  def apply[A](implicit ev:JsonSerializable[A]) = ev
+  def apply[A](implicit ev: JsonSerializable[A]) = ev
 }
 
-trait HasHeader[A] {
-  def headers(): List[HttpHeader]
+trait JsonDeserializable[A] {
+  def deserialize(jValue: JValue): A
 }
 
-trait FromJson[A] {
-  def fromJson(jValue: JValue): A
+object JsonDeserializable {
+  def apply[A](implicit ev: JsonDeserializable[A]) = ev
 }
 
 trait ToResult[A, B] {

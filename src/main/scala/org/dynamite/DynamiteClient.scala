@@ -43,18 +43,19 @@ case class DynamiteClient[A](
         key = (Some(primaryKey) :: sortKey :: Nil).flatten,
         table = configuration.table,
         consistentRead = consistentRead),
+      List(
+        AcceptEncodingHeader("identity"),
+        ContentTypeHeader("application/x-amz-json-1.0"),
+        AmazonTargetHeader("DynamoDB_20120810.GetItem")),
       (res: GetItemResponse) =>
         GetItemResult[A](fromAws(res.item).extractOpt[A]))
   }
 
-  private def requestAws[REQUEST : JsonSerializable : HasHeader, RESPONSE, RESULT](
+  private def requestAws[REQUEST: JsonSerializable, RESPONSE: JsonDeserializable, RESULT](
     request: REQUEST,
+    headers: List[HttpHeader],
     respToRes: RESPONSE => RESULT)
-    (implicit
-      fromJson: FromJson[RESPONSE],
-      ec: ExecutionContext): Future[Either[DynamoError, RESULT]] = {
-
-    //implicitely[]
+    (implicit ec: ExecutionContext): Future[Either[DynamoError, RESULT]] = {
     EitherT.fromDisjunction[Future] {
       for {
         awsHost <- configuration.host.getOrElse(configuration.awsRegion.endpoint).right
@@ -62,7 +63,7 @@ case class DynamiteClient[A](
         headers <- (
           AmazonDateHeader(dateStamp.dateTime) ::
             HostHeader(awsHost) ::
-            requestable.headers).right
+            headers).right
         requestBody <- JsonSerializable[REQUEST].serialize(request)
         signingHeaders <- signRequest(
           httpMethod = HttpMethod.POST,
@@ -82,17 +83,10 @@ case class DynamiteClient[A](
       Future {
         for {
           json <- parse(res.responseBody.value)
-          response <- fromJson.fromJson(json).right
+          response <- JsonDeserializable[RESPONSE].deserialize(json).right
           result <- respToRes(response).right
         } yield result
       }
     } toEither
   }
-
-}
-
-trait Protocol[REQUEST, RESPONSE, RESULT, A]
-
-object Protocol {
-  implicit def getItem[A] = new Protocol[GetItemRequest, GetItemResponse, GetItemResult[A]]
 }
