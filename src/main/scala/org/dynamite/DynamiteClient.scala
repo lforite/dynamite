@@ -37,6 +37,7 @@ case class DynamiteClient[A](
     sortKey: Option[(String, AwsScalarType)] = None,
     consistentRead: Boolean = false)
     (implicit ec: ExecutionContext): Future[Either[DynamoError, GetItemResult[A]]] = {
+
     requestAws[GetItemRequest, GetItemResponse, GetItemResult[A]](
       GetItemRequest(
         key = (Some(primaryKey) :: sortKey :: Nil).flatten,
@@ -46,13 +47,14 @@ case class DynamiteClient[A](
         GetItemResult[A](fromAws(res.item).extractOpt[A]))
   }
 
-  private def requestAws[REQUEST, RESPONSE, RESULT](
+  private def requestAws[REQUEST : JsonSerializable : HasHeader, RESPONSE, RESULT](
     request: REQUEST,
     respToRes: RESPONSE => RESULT)
     (implicit
-      requestable: JsonSerializable[REQUEST] with HasHeader[REQUEST],
       fromJson: FromJson[RESPONSE],
       ec: ExecutionContext): Future[Either[DynamoError, RESULT]] = {
+
+    //implicitely[]
     EitherT.fromDisjunction[Future] {
       for {
         awsHost <- configuration.host.getOrElse(configuration.awsRegion.endpoint).right
@@ -61,7 +63,7 @@ case class DynamiteClient[A](
           AmazonDateHeader(dateStamp.dateTime) ::
             HostHeader(awsHost) ::
             requestable.headers).right
-        requestBody <- requestable.serialize(request)
+        requestBody <- JsonSerializable[REQUEST].serialize(request)
         signingHeaders <- signRequest(
           httpMethod = HttpMethod.POST,
           uri = Uri("/"),
@@ -87,4 +89,10 @@ case class DynamiteClient[A](
     } toEither
   }
 
+}
+
+trait Protocol[REQUEST, RESPONSE, RESULT, A]
+
+object Protocol {
+  implicit def getItem[A] = new Protocol[GetItemRequest, GetItemResponse, GetItemResult[A]]
 }

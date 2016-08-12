@@ -14,6 +14,11 @@ case class ConsumedCapacity(capacityUnits: Int,
   tableName: String
 )
 
+
+trait AwsOperation[REQUEST, RESPONSE, RESULT]
+
+
+
 case class GetItemRequest(
   attributes: List[String] = List(),
   consistentRead: Boolean = false,
@@ -41,6 +46,7 @@ object GetItemRequest {
       AmazonTargetHeader("DynamoDB_20120810.GetItem"))
   }
 
+  //move this in the method call
   val headers = List(
     AcceptEncodingHeader("identity"),
     ContentTypeHeader("application/x-amz-json-1.0"),
@@ -70,6 +76,10 @@ case class GetItemResult[A](item: Option[A])
 
 trait JsonSerializable[A] {
   def serialize(a: A): DynamoError \/ RequestBody
+}
+object JsonSerializable {
+  //implicit class JsonSerializablePostFix
+  def apply[A](implicit ev:JsonSerializable[A]) = ev
 }
 
 trait HasHeader[A] {
