@@ -61,7 +61,7 @@ object AwsCanonicalRequestBuilder {
 
 /** AWS Signature V4 second part of the signing protocol; more details at
   * http://docs.aws.amazon.com/general/latest/gr/sigv4-create-string-to-sign.html */
-trait AwsStringToSignBuilder {
+object AwsStringToSignBuilder {
 
   protected[dynamite] def stringToSign(
     awsDate: AwsDate,
@@ -122,8 +122,7 @@ trait AwsSignatureBuilder {
 
 /** The component putting together */
 object AwsRequestSigner
-    extends AwsStringToSignBuilder
-    with AwsSigningKeyBuilder
+    extends AwsSigningKeyBuilder
     with AwsSignatureBuilder {
 
   protected[dynamite] def signRequest(
@@ -138,7 +137,7 @@ object AwsRequestSigner
     awsCredentials: AwsCredentials): SigningError \/ AwsSigningHeaders = {
     for {
       cRequest <- AwsCanonicalRequestBuilder.canonicalRequest(httpMethod, uri, queryParameters, headers, requestBody)
-      sToS <- stringToSign(awsDate, awsRegion, awsService, cRequest)
+      sToS <-AwsStringToSignBuilder. stringToSign(awsDate, awsRegion, awsService, cRequest)
       signingKey <- derive(awsCredentials, awsDate.date, awsRegion, awsService)
       signature <- sign(signingKey, sToS)
     } yield AwsSigningHeaders(

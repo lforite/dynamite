@@ -12,7 +12,7 @@ class AwsStringToSignBuilderTest extends Specification { override def is = s2"""
 
   /** Example from http://docs.aws.amazon.com/general/latest/gr/sigv4-create-string-to-sign.html */
   def stringToSignOk = {
-    Dummy.stringToSign(
+    AwsStringToSignBuilder.stringToSign(
       AwsDate(LocalDateTime.of(2015, 8, 30, 12, 36, 0)),
       AwsRegion.US_EAST_1,
       AwsService("iam"),
@@ -36,5 +36,4 @@ class AwsStringToSignBuilderTest extends Specification { override def is = s2"""
       )
   }
 
-  private[this] object Dummy extends AwsStringToSignBuilder
 }
