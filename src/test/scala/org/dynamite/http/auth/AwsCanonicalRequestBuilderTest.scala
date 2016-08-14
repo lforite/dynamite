@@ -11,7 +11,7 @@ class AwsCanonicalRequestBuilderTest extends Specification { override def is = s
 
   /** Example from http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html */
   def createCanonicalRequest = {
-    Dummy.canonicalRequest(
+    AwsCanonicalRequestBuilder.canonicalRequest(
       httpMethod = HttpMethod.GET,
       uri = Uri("/"),
       queryParameters = List("Action" -> List("ListUsers"), "Version" -> List("2010-05-08")),
@@ -33,7 +33,5 @@ class AwsCanonicalRequestBuilderTest extends Specification { override def is = s
         AwsSignedHeaders("content-type;host;x-amz-date")))
       )
   }
-
-  private[this] object Dummy extends AwsCanonicalRequestBuilder
 
 }

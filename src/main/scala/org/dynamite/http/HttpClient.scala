@@ -10,7 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scalaz.Scalaz._
 import scalaz.{EitherT, \/}
 
-trait HttpClient extends RequestExtractor {
+object HttpClient {
 
   protected[dynamite] def httpRequest(req: AwsHttpRequest)
     (implicit ex: ExecutionContext): EitherT[Future, DynamoError, AwsHttpResponse] = {
@@ -30,7 +30,7 @@ trait HttpClient extends RequestExtractor {
 
   private[this] def toResponseBody(resp: Response): DynamoError \/ AwsHttpResponse = {
     for {
-      responseBody <- extract(resp)
+      responseBody <- RequestExtractor.extract(resp)
       _ <- println(responseBody).right
     } yield AwsHttpResponse(
       org.dynamite.dsl.StatusCode(resp.getStatusCode),

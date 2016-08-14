@@ -9,7 +9,7 @@ class AwsSignatureBuilderTest extends Specification { override def is = s2"""
     """
 
   def correctlySigned = {
-    Dummy.sign(
+    AwsSignatureBuilder.sign(
       AwsSigningKey(Array(196.toByte, 175.toByte, 177.toByte, 204.toByte, 87.toByte, 113.toByte, 216.toByte, 113.toByte, 118.toByte, 58.toByte, 57.toByte, 62.toByte, 68.toByte, 183.toByte, 3.toByte, 87.toByte, 27.toByte, 85.toByte, 204.toByte, 40.toByte, 66.toByte, 77.toByte, 26.toByte, 94.toByte, 134.toByte, 218.toByte, 110.toByte, 211.toByte, 193.toByte, 84.toByte, 164.toByte, 185.toByte)),
       AwsStringToSign(
         "AWS4-HMAC-SHA256\n" +
@@ -21,7 +21,5 @@ class AwsSignatureBuilderTest extends Specification { override def is = s2"""
       succ => succ.value must be_==("5d672d79c15b13162d9279b0855cfba6789a8edb4c82c400e06b5924a6f2b5d7")
       )
   }
-
-  private[this] object Dummy extends AwsSignatureBuilder
 
 }

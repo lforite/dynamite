@@ -29,10 +29,8 @@ class AwsJsonWriterTest extends org.specs2.mutable.Specification {
       val expected = JObject(List(
         testCase._2 -> JObject(List(testCase._1 -> testCase._4))))
 
-      Dummy.toAws(json) must be_==(expected)
+      AwsJsonWriter.toAws(json) must be_==(expected)
     }
   }
-
-  private[this] object Dummy extends AwsJsonWriter
 
 }

@@ -22,7 +22,7 @@ class AwsJsonReaderTest extends Specification { def is = s2"""
     val expected: JValue = JObject(List(
       JField("sField", JString("s value"))))
 
-    Dummy.fromAws(aws) must be_==(expected)
+    AwsJsonReader.fromAws(aws) must be_==(expected)
   }
 
   def shrinkNField = {
@@ -33,7 +33,7 @@ class AwsJsonReaderTest extends Specification { def is = s2"""
     val expected: JValue = JObject(List(
       JField("nField", JDecimal(BigDecimal(123)))))
 
-    Dummy.fromAws(aws) must be_==(expected)
+    AwsJsonReader.fromAws(aws) must be_==(expected)
   }
 
   def shrinkBoolField = {
@@ -44,7 +44,7 @@ class AwsJsonReaderTest extends Specification { def is = s2"""
     val expected: JValue = JObject(List(
       JField("boolField", JBool(true))))
 
-    Dummy.fromAws(aws) must be_==(expected)
+    AwsJsonReader.fromAws(aws) must be_==(expected)
   }
 
   def shrinkSsField = {
@@ -56,7 +56,7 @@ class AwsJsonReaderTest extends Specification { def is = s2"""
     val expected: JValue = JObject(List(
       JField("ssField", JArray(List(JString("s1"), JString("s2"))))))
 
-    Dummy.fromAws(aws) must be_==(expected)
+    AwsJsonReader.fromAws(aws) must be_==(expected)
   }
 
   def shrinkLField = {
@@ -68,7 +68,7 @@ class AwsJsonReaderTest extends Specification { def is = s2"""
     val expected: JValue = JObject(List(
       JField("lField", JArray(List(JInt(1), JInt(2))))))
 
-    Dummy.fromAws(aws) must be_==(expected)
+    AwsJsonReader.fromAws(aws) must be_==(expected)
   }
 
 
@@ -82,7 +82,7 @@ class AwsJsonReaderTest extends Specification { def is = s2"""
     val expected: JValue = JObject(List(
       JField("mField", JObject(List(JField("sField", JString("s value")))))))
 
-    Dummy.fromAws(aws) must be_==(expected)
+    AwsJsonReader.fromAws(aws) must be_==(expected)
   }
 
   def fromAws = {
@@ -109,10 +109,7 @@ class AwsJsonReaderTest extends Specification { def is = s2"""
       JField("lField", JArray(List(JInt(1), JInt(2)))),
       JField("mField", JObject(List(JField("sField", JString("s value")))))))
 
-    Dummy.fromAws(aws) must be_==(expected)
+    AwsJsonReader.fromAws(aws) must be_==(expected)
   }
-
-
-  private[this] object Dummy extends AwsJsonReader
-
+  
 }

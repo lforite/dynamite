@@ -12,7 +12,7 @@ class AwsRequestSignerTest extends Specification { override def is = s2"""
     """
 
   def signRequest = {
-    Dummy.signRequest(
+    AwsRequestSigner.signRequest(
       HttpMethod.GET,
       Uri("/"),
       List("Action" -> List("ListUsers"), "Version" -> List("2010-05-08")),
@@ -34,7 +34,5 @@ class AwsRequestSignerTest extends Specification { override def is = s2"""
           AwsSignedHeaders("content-type;host;x-amz-date"),
           AwsSignature("5d672d79c15b13162d9279b0855cfba6789a8edb4c82c400e06b5924a6f2b5d7"))))
   }
-
-  private[this] object Dummy extends AwsRequestSigner
 
 }

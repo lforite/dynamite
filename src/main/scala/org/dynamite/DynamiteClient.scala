@@ -2,7 +2,7 @@ package org.dynamite
 
 import java.time.{ZoneOffset, ZonedDateTime}
 
-import org.dynamite.ast.{AwsJsonReader, AwsJsonWriter, AwsScalarType, AwsTypeSerializer}
+import org.dynamite.ast.{AwsJsonReader, AwsScalarType, AwsTypeSerializer}
 import org.dynamite.dsl.{GetItemRequest, _}
 import org.dynamite.http._
 import org.dynamite.http.auth.AwsRequestSigner
@@ -24,12 +24,7 @@ trait DynamoClient {
 case class DynamiteClient(
   configuration: ClientConfiguration,
   credentials: AwsCredentials)(implicit ec: ExecutionContext)
-  extends DynamoClient
-    with AwsJsonWriter
-    with AwsJsonReader
-    with AwsRequestSigner
-    with RequestParser
-    with HttpClient {
+  extends DynamoClient {
 
   implicit private val formats = DefaultFormats + new AwsTypeSerializer
 
@@ -45,7 +40,7 @@ case class DynamiteClient(
         table = configuration.table,
         consistentRead = consistentRead),
       AmazonTargetHeader("DynamoDB_20120810.GetItem")) { res: GetItemResponse =>
-      GetItemResult[A](fromAws(res.item).extractOpt[A])
+      GetItemResult[A](AwsJsonReader.fromAws(res.item).extractOpt[A])
     }
   }
 
@@ -66,7 +61,7 @@ case class DynamiteClient(
             targetHeader ::
             Nil).right
         requestBody <- JsonSerializable[REQUEST].serialize(request)
-        signingHeaders <- signRequest(
+        signingHeaders <- AwsRequestSigner.signRequest(
           httpMethod = HttpMethod.POST,
           uri = Uri("/"),
           queryParameters = List(),
@@ -79,11 +74,11 @@ case class DynamiteClient(
         signedHeaders <- (AuthorizationHeader(signingHeaders) :: headers).right
       } yield AwsHttpRequest(awsHost, requestBody, signedHeaders)
     } flatMap {
-      httpRequest
+      HttpClient.httpRequest
     } flatMapF { res =>
       Future {
         for {
-          json <- parse(res.responseBody.value)
+          json <- RequestParser.parse(res.responseBody.value)
           response <- JsonDeserializable[RESPONSE].deserialize(json).right
           result <- respToRes(response).right
         } yield result
