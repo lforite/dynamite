@@ -15,10 +15,11 @@ trait HttpClient extends RequestExtractor {
   protected[dynamite] def httpRequest(req: AwsHttpRequest)
     (implicit ex: ExecutionContext): EitherT[Future, DynamoError, AwsHttpResponse] = {
     EitherT.fromEither[Future, Throwable, Response] {
-      Http(
+      Http {
         host(req.host.value).secure <<
           req.requestBody.value <:<
-          req.signedHeaders.map(_.render)).either
+          req.signedHeaders.map(_.render)
+      } either
     } leftMap[DynamoError] {
       case ce: ConnectException => UnreachableHostException(req.host.value)
       case _: Throwable => BasicDynamoError()

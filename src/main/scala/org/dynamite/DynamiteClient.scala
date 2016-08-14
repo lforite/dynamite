@@ -3,34 +3,28 @@ package org.dynamite
 import java.time.{ZoneOffset, ZonedDateTime}
 
 import org.dynamite.ast.{AwsJsonReader, AwsJsonWriter, AwsScalarType, AwsTypeSerializer}
-import org.dynamite.dsl._
+import org.dynamite.dsl.{GetItemRequest, _}
 import org.dynamite.http._
 import org.dynamite.http.auth.AwsRequestSigner
 import org.json4s.DefaultFormats
-import org.json4s.jackson.JsonMethods._
 
 import scala.concurrent.{ExecutionContext, Future}
+import scalaz.EitherT
 import scalaz.Scalaz._
-import scalaz.{EitherT, \/}
 
-trait DynamoClient[A] {
-
-  type DynamoAction[B] = Future[Either[DynamoError, B]]
-
-  def get(
+trait DynamoClient {
+  def get[A](
     primaryKey: (String, AwsScalarType),
     sortKey: Option[(String, AwsScalarType)],
-    consistentRead: Boolean)(implicit ec: ExecutionContext): DynamoAction[Option[A]]
-
-  def put(a: A): DynamoAction[Boolean]
-
-  def delete(id: String): DynamoAction[Boolean]
+    consistentRead: Boolean)
+    (implicit ec: ExecutionContext,
+      m: Manifest[A]): Future[Either[DynamoError, GetItemResult[A]]]
 }
 
-case class DynamiteClient[A](
+case class DynamiteClient(
   configuration: ClientConfiguration,
-  credentials: AwsCredentials)(implicit m: Manifest[A], ec: ExecutionContext)
-  extends DynamoClient[A]
+  credentials: AwsCredentials)(implicit ec: ExecutionContext)
+  extends DynamoClient
     with AwsJsonWriter
     with AwsJsonReader
     with AwsRequestSigner
@@ -39,28 +33,39 @@ case class DynamiteClient[A](
 
   implicit private val formats = DefaultFormats + new AwsTypeSerializer
 
-  private val getHeaders = List(
-    AcceptEncodingHeader("identity"),
-    ContentTypeHeader("application/x-amz-json-1.0"),
-    AmazonTargetHeader("DynamoDB_20120810.GetItem"))
-
-  override def get(
+  override def get[A](
     primaryKey: (String, AwsScalarType),
     sortKey: Option[(String, AwsScalarType)] = None,
-    consistentRead: Boolean = false)(implicit ec: ExecutionContext): DynamoAction[Option[A]] = {
+    consistentRead: Boolean = false)
+    (implicit ec: ExecutionContext, m: Manifest[A]):
+  Future[Either[DynamoError, GetItemResult[A]]] = {
+    requestAws[GetItemRequest, GetItemResponse, GetItemResult[A]](
+      GetItemRequest(
+        key = (Some(primaryKey) :: sortKey :: Nil).flatten,
+        table = configuration.table,
+        consistentRead = consistentRead),
+      AmazonTargetHeader("DynamoDB_20120810.GetItem")) { res: GetItemResponse =>
+      GetItemResult[A](fromAws(res.item).extractOpt[A])
+    }
+  }
+
+  private def requestAws[REQUEST: JsonSerializable, RESPONSE: JsonDeserializable, RESULT](
+    request: REQUEST,
+    targetHeader: AmazonTargetHeader)
+    (respToRes: RESPONSE => RESULT)
+    (implicit ec: ExecutionContext): Future[Either[DynamoError, RESULT]] = {
     EitherT.fromDisjunction[Future] {
       for {
         awsHost <- configuration.host.getOrElse(configuration.awsRegion.endpoint).right
         dateStamp <- AwsDate(ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime).right
         headers <- (
-          AmazonDateHeader(dateStamp.dateTime) ::
+          AcceptEncodingHeader("identity") ::
+            ContentTypeHeader("application/x-amz-json-1.0") ::
+            AmazonDateHeader(dateStamp.dateTime) ::
             HostHeader(awsHost) ::
-            getHeaders).right
-        getItemRequest <- GetItemRequest(
-          key = (Some(primaryKey) :: sortKey :: Nil).flatten,
-          table = configuration.table,
-          consistentRead = consistentRead).right
-        requestBody <- toRequestBody(getItemRequest)
+            targetHeader ::
+            Nil).right
+        requestBody <- JsonSerializable[REQUEST].serialize(request)
         signingHeaders <- signRequest(
           httpMethod = HttpMethod.POST,
           uri = Uri("/"),
@@ -75,29 +80,14 @@ case class DynamiteClient[A](
       } yield AwsHttpRequest(awsHost, requestBody, signedHeaders)
     } flatMap {
       httpRequest
-    } flatMapF { r =>
-      Future.successful(handleResponse(r))
+    } flatMapF { res =>
+      Future {
+        for {
+          json <- parse(res.responseBody.value)
+          response <- JsonDeserializable[RESPONSE].deserialize(json).right
+          result <- respToRes(response).right
+        } yield result
+      }
     } toEither
   }
-
-  private def toRequestBody(getItemRequest: GetItemRequest): DynamoError \/ RequestBody = {
-    (for {
-      json <- GetItemRequest.toJson(getItemRequest).right
-      renderedJson <- render(json).right
-      body <- \/.fromTryCatchThrowable[String, Throwable](compact(renderedJson))
-    } yield RequestBody(body)) leftMap (e => JsonSerialisationError)
-  }
-
-  private def handleResponse(res: AwsHttpResponse): DynamoError \/ Option[A] =
-    for {
-      json <- parse(res.responseBody.value)
-      getResponse <- GetItemResponse.fromJson(json).right
-      transformed <- fromAws(getResponse.item).right
-    } yield transformed.extractOpt[A]
-
-
-  override def put(a: A): DynamoAction[Boolean] = ???
-
-  override def delete(id: String): DynamoAction[Boolean] = ???
-
 }
