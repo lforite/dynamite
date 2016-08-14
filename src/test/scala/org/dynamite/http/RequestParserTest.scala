@@ -11,19 +11,17 @@ class RequestParserTest extends Specification with ScalaCheck { def is = s2"""
   """
 
   def parseOk = prop { validJson: ValidJson =>
-    Dummy.parse(validJson.json) fold(
+    RequestParser.parse(validJson.json) fold(
       left => ko(validJson.json + "should be valid"),
       right => ok
       )
   }
 
   def parseKo = prop { invalidJson: String =>
-    Dummy.parse(invalidJson) fold(
+    RequestParser.parse(invalidJson) fold(
       left => ok,
       right => ko(invalidJson + "should be invalid")
       )
   }
-
-  private[this] object Dummy extends RequestParser
 
 }

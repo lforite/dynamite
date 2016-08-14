@@ -7,7 +7,7 @@ import org.json4s.jackson.JsonMethods.{parse => jparse}
 
 import scalaz.\/
 
-trait RequestParser {
+object RequestParser {
   protected[dynamite] def parse(jsonString: String): DynamoError \/ JValue =
     \/.fromTryCatchThrowable[JValue, Throwable](jparse(jsonString)) leftMap {
       _: Throwable => BasicDynamoError()

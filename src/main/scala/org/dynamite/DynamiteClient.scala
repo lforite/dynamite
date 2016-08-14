@@ -25,7 +25,6 @@ case class DynamiteClient(
   configuration: ClientConfiguration,
   credentials: AwsCredentials)(implicit ec: ExecutionContext)
   extends DynamoClient
-    with RequestParser
     with HttpClient {
 
   implicit private val formats = DefaultFormats + new AwsTypeSerializer
@@ -80,7 +79,7 @@ case class DynamiteClient(
     } flatMapF { res =>
       Future {
         for {
-          json <- parse(res.responseBody.value)
+          json <- RequestParser.parse(res.responseBody.value)
           response <- JsonDeserializable[RESPONSE].deserialize(json).right
           result <- respToRes(response).right
         } yield result
