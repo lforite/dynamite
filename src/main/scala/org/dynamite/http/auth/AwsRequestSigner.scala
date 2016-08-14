@@ -9,7 +9,7 @@ import scalaz.\/
 
 /** AWS Signature V4 first part of the signing protocol; more details at
   * http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html */
-trait AwsCanonicalRequestBuilder {
+object AwsCanonicalRequestBuilder {
   /** Based on the request parameters, create the canonical request */
   def canonicalRequest(
     httpMethod: HttpMethod,
@@ -122,8 +122,7 @@ trait AwsSignatureBuilder {
 
 /** The component putting together */
 object AwsRequestSigner
-  extends AwsCanonicalRequestBuilder
-    with AwsStringToSignBuilder
+    extends AwsStringToSignBuilder
     with AwsSigningKeyBuilder
     with AwsSignatureBuilder {
 
@@ -138,7 +137,7 @@ object AwsRequestSigner
     awsService: AwsService,
     awsCredentials: AwsCredentials): SigningError \/ AwsSigningHeaders = {
     for {
-      cRequest <- canonicalRequest(httpMethod, uri, queryParameters, headers, requestBody)
+      cRequest <- AwsCanonicalRequestBuilder.canonicalRequest(httpMethod, uri, queryParameters, headers, requestBody)
       sToS <- stringToSign(awsDate, awsRegion, awsService, cRequest)
       signingKey <- derive(awsCredentials, awsDate.date, awsRegion, awsService)
       signature <- sign(signingKey, sToS)
