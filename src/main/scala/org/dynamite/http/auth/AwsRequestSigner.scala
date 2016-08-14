@@ -10,9 +10,7 @@ import scalaz.\/
 /** AWS Signature V4 first part of the signing protocol; more details at
   * http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html */
 trait AwsCanonicalRequestBuilder
-  extends HexFormatter
-    with HashFunctions {
-
+  extends HexFormatter {
   /** Based on the request parameters, create the canonical request */
   def canonicalRequest(
     httpMethod: HttpMethod,
@@ -26,7 +24,7 @@ trait AwsCanonicalRequestBuilder
       canonicalQueryParameters <- toCanonicalQueryParameters(queryParameters).right
       canonicalHeaders <- toCanonicalHeaders(headers).right
       canonicalSignedHeader <- toCanonicalSignedHeaders(headers).right
-      hashedRequestBody <- sha256(requestBody.value) map toHexFormat map (_.toLowerCase)
+      hashedRequestBody <- HashFunctions.sha256(requestBody.value) map toHexFormat map (_.toLowerCase)
     } yield AwsCanonicalRequest(
       canonicalHttpMethod + "\n" +
         canonicalUri + "\n" +
@@ -65,8 +63,7 @@ trait AwsCanonicalRequestBuilder
 /** AWS Signature V4 second part of the signing protocol; more details at
   * http://docs.aws.amazon.com/general/latest/gr/sigv4-create-string-to-sign.html */
 trait AwsStringToSignBuilder
-  extends HashFunctions
-    with HexFormatter {
+  extends HexFormatter {
 
   protected[dynamite] def stringToSign(
     awsDate: AwsDate,
@@ -77,7 +74,7 @@ trait AwsStringToSignBuilder
       algorithm <- "AWS4-HMAC-SHA256".right
       date <- awsDate.dateTime.value.right
       scope <- s"${awsDate.date.value}/${region.name.value}/${service.value}/aws4_request".right
-      hashedCanonicalRequest <- sha256(canonicalRequest.value) map toHexFormat
+      hashedCanonicalRequest <- HashFunctions.sha256(canonicalRequest.value) map toHexFormat
     } yield AwsStringToSign(
       algorithm + '\n' +
         date + '\n' +
@@ -91,8 +88,7 @@ trait AwsStringToSignBuilder
 /** AWS Signature V4 third part of the signing protocol; more details at
   * http://docs.aws.amazon.com/general/latest/gr/sigv4-create-string-to-sign.html */
 trait AwsSigningKeyBuilder
-  extends HexFormatter
-    with HashFunctions {
+  extends HexFormatter {
   protected[dynamite] def derive(
     credentials: AwsCredentials,
     dateStamp: DateStamp,
@@ -109,20 +105,20 @@ trait AwsSigningKeyBuilder
     service: AwsService): SigningError \/ Array[Byte] =
     (for {
       kSecret <- ("AWS4" + key.value).getBytes("UTF-8").right
-      kDate <- hmacSha256(dateStamp.value, kSecret)
-      kRegion <- hmacSha256(region.name.value, kDate)
-      kService <- hmacSha256(service.value, kRegion)
-      result <- hmacSha256("aws4_request", kService)
+      kDate <- HashFunctions.hmacSha256(dateStamp.value, kSecret)
+      kRegion <- HashFunctions.hmacSha256(region.name.value, kDate)
+      kService <- HashFunctions.hmacSha256(service.value, kRegion)
+      result <- HashFunctions.hmacSha256("aws4_request", kService)
     } yield result) leftMap (he => SigningError(s"Unexpected error occurred while signing the request, $he"))
 }
 
 /** AWS Signature V4 final step of the signing protocol */
-trait AwsSignatureBuilder extends HashFunctions with HexFormatter {
+trait AwsSignatureBuilder extends HexFormatter {
   protected[dynamite] def sign(
     signingKey: AwsSigningKey,
     stringToSign: AwsStringToSign): SigningError \/ AwsSignature = {
     (for {
-      signature <- hmacSha256(stringToSign.value, signingKey.value) map toHexFormat
+      signature <- HashFunctions.hmacSha256(stringToSign.value, signingKey.value) map toHexFormat
     } yield AwsSignature(signature)) leftMap (he => SigningError(s"Unexpected error occurred while signing the request, $he"))
   }
 }

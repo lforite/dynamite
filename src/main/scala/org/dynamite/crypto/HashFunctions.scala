@@ -9,7 +9,7 @@ import org.dynamite.dsl._
 import scalaz.Scalaz._
 import scalaz.\/
 
-trait HashFunctions {
+object HashFunctions {
   protected[dynamite] def hmacSha256(toEncode: String, key: Array[Byte]): HashingError \/ Array[Byte] =
     for {
       algorithm <- "HmacSHA256".right
