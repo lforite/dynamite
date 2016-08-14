@@ -24,8 +24,7 @@ trait DynamoClient {
 case class DynamiteClient(
   configuration: ClientConfiguration,
   credentials: AwsCredentials)(implicit ec: ExecutionContext)
-  extends DynamoClient
-    with HttpClient {
+  extends DynamoClient {
 
   implicit private val formats = DefaultFormats + new AwsTypeSerializer
 
@@ -75,7 +74,7 @@ case class DynamiteClient(
         signedHeaders <- (AuthorizationHeader(signingHeaders) :: headers).right
       } yield AwsHttpRequest(awsHost, requestBody, signedHeaders)
     } flatMap {
-      httpRequest
+      HttpClient.httpRequest
     } flatMapF { res =>
       Future {
         for {
