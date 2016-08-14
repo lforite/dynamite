@@ -35,5 +35,4 @@ class AwsRequestSignerTest extends Specification { override def is = s2"""
           AwsSignature("5d672d79c15b13162d9279b0855cfba6789a8edb4c82c400e06b5924a6f2b5d7"))))
   }
 
-
 }

@@ -110,7 +110,7 @@ object AwsSigningKeyBuilder {
 }
 
 /** AWS Signature V4 final step of the signing protocol */
-trait AwsSignatureBuilder {
+object AwsSignatureBuilder {
   protected[dynamite] def sign(
     signingKey: AwsSigningKey,
     stringToSign: AwsStringToSign): SigningError \/ AwsSignature = {
@@ -121,7 +121,7 @@ trait AwsSignatureBuilder {
 }
 
 /** The component putting together */
-object AwsRequestSigner extends AwsSignatureBuilder {
+object AwsRequestSigner {
 
   protected[dynamite] def signRequest(
     httpMethod: HttpMethod,
@@ -137,7 +137,7 @@ object AwsRequestSigner extends AwsSignatureBuilder {
       cRequest <- AwsCanonicalRequestBuilder.canonicalRequest(httpMethod, uri, queryParameters, headers, requestBody)
       sToS <- AwsStringToSignBuilder.stringToSign(awsDate, awsRegion, awsService, cRequest)
       signingKey <- AwsSigningKeyBuilder.derive(awsCredentials, awsDate.date, awsRegion, awsService)
-      signature <- sign(signingKey, sToS)
+      signature <- AwsSignatureBuilder.sign(signingKey, sToS)
     } yield AwsSigningHeaders(
       AwsSigningCredentials(awsCredentials.accessKey.value + "/" + sToS.scope.value),
       cRequest.signedHeaders,
