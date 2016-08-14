@@ -2,7 +2,7 @@ package org.dynamite
 
 import java.time.{ZoneOffset, ZonedDateTime}
 
-import org.dynamite.ast.{AwsJsonReader, AwsJsonWriter, AwsScalarType, AwsTypeSerializer}
+import org.dynamite.ast.{AwsJsonReader, AwsScalarType, AwsTypeSerializer}
 import org.dynamite.dsl.{GetItemRequest, _}
 import org.dynamite.http._
 import org.dynamite.http.auth.AwsRequestSigner
@@ -25,7 +25,6 @@ case class DynamiteClient(
   configuration: ClientConfiguration,
   credentials: AwsCredentials)(implicit ec: ExecutionContext)
   extends DynamoClient
-    with AwsJsonWriter
     with AwsJsonReader
     with AwsRequestSigner
     with RequestParser

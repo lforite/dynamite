@@ -25,7 +25,7 @@ trait AwsJsonReader {
 
 }
 
-trait AwsJsonWriter {
+object AwsJsonWriter {
   protected[dynamite] def toAws(json: JValue): JValue = augmentObject(json)
 
   private def augmentField(field: (String, JValue)): (String, JValue) = field match {
