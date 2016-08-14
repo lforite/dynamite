@@ -34,12 +34,13 @@ case class DynamiteClient(
     consistentRead: Boolean = false)
     (implicit ec: ExecutionContext, m: Manifest[A]):
   Future[Either[DynamoError, GetItemResult[A]]] = {
-    requestAws[GetItemRequest, GetItemResponse, GetItemResult[A]](
+    requestAws(
       GetItemRequest(
         key = (Some(primaryKey) :: sortKey :: Nil).flatten,
         table = configuration.table,
         consistentRead = consistentRead),
-      AmazonTargetHeader("DynamoDB_20120810.GetItem")) { res: GetItemResponse =>
+      AmazonTargetHeader("DynamoDB_20120810.GetItem")
+    ) { res: GetItemResponse =>
       GetItemResult[A](AwsJsonReader.fromAws(res.item).extractOpt[A])
     }
   }
@@ -48,7 +49,10 @@ case class DynamiteClient(
     request: REQUEST,
     targetHeader: AmazonTargetHeader)
     (respToRes: RESPONSE => RESULT)
-    (implicit ec: ExecutionContext): Future[Either[DynamoError, RESULT]] = {
+    (implicit
+      ec: ExecutionContext,
+      protocol: DynamoProtocol[REQUEST, RESPONSE, RESULT]):
+  Future[Either[DynamoError, RESULT]] = {
     EitherT.fromDisjunction[Future] {
       for {
         awsHost <- configuration.host.getOrElse(configuration.awsRegion.endpoint).right

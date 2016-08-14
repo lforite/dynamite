@@ -9,6 +9,12 @@ import org.json4s.jackson.JsonMethods._
 import scalaz.Scalaz._
 import scalaz.\/
 
+trait DynamoProtocol[REQUEST, RESPONSE, RESULT]
+
+object DynamoProtocol {
+  implicit def GetItemProtocol[A] = new DynamoProtocol[GetItemRequest, GetItemResponse, GetItemResult[A]] {}
+}
+
 trait JsonSerializable[A] {
   def serialize(a: A): DynamoError \/ RequestBody
 }
