@@ -17,20 +17,18 @@ class RequestExtractorTest extends Specification { def is = s2"""
     """
 
   private def extractOk = {
-    Dummy.extract(new ResponseMock("{}")) fold(
+    RequestExtractor.extract(new ResponseMock("{}")) fold(
       err => ko("It should be a success"),
       succ => succ should be_==("{}")
       )
   }
 
   private def extractKo = {
-    Dummy.extract(new ResponseMock(new IOException("IOException occurred"))) fold(
+    RequestExtractor.extract(new ResponseMock(new IOException("IOException occurred"))) fold(
       err => err should be_==(BasicDynamoError()),
       succ => ko("It should be an error")
       )
   }
-
-  private[this] object Dummy extends RequestExtractor
 
   private[this] class ResponseMock(returnValue: Any) extends Response {
 

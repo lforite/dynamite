@@ -14,7 +14,7 @@ object RequestParser {
     }
 }
 
-trait RequestExtractor {
+object RequestExtractor {
   protected[dynamite] def extract(resp: Response): DynamoError \/ String =
     \/.fromTryCatchThrowable[String, Throwable](resp.getResponseBody) leftMap {
       _: Throwable => BasicDynamoError()
