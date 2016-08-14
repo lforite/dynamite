@@ -17,11 +17,10 @@ class AwsSigningKeyBuilderTest extends Specification { override def is = s2"""
     val serviceName = AwsService("iam")
     val credentials = AwsCredentials(AwsAccessKey("anyAccessKey"), secretKey)
 
-    Dummy.derive(credentials, dateStamp, regionName, serviceName) fold(
+    AwsSigningKeyBuilder.derive(credentials, dateStamp, regionName, serviceName) fold(
       s => ko,
       succ => HexFormatter.toHexFormat(succ.value) must be_==("f4780e2d9f65fa895f9c67b32ce1baf0b0d8a43505a000a1a9e090d414db404d")
       )
   }
 
-  private[this] object Dummy extends AwsSigningKeyBuilder
 }
