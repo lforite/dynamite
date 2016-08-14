@@ -25,7 +25,6 @@ case class DynamiteClient(
   configuration: ClientConfiguration,
   credentials: AwsCredentials)(implicit ec: ExecutionContext)
   extends DynamoClient
-    with AwsRequestSigner
     with RequestParser
     with HttpClient {
 
@@ -64,7 +63,7 @@ case class DynamiteClient(
             targetHeader ::
             Nil).right
         requestBody <- JsonSerializable[REQUEST].serialize(request)
-        signingHeaders <- signRequest(
+        signingHeaders <- AwsRequestSigner.signRequest(
           httpMethod = HttpMethod.POST,
           uri = Uri("/"),
           queryParameters = List(),

@@ -128,7 +128,7 @@ trait AwsSignatureBuilder extends HashFunctions with HexFormatter {
 }
 
 /** The component putting together */
-trait AwsRequestSigner
+object AwsRequestSigner
   extends AwsCanonicalRequestBuilder
     with AwsStringToSignBuilder
     with AwsSigningKeyBuilder
