@@ -9,17 +9,23 @@ import org.json4s.jackson.JsonMethods._
 import scalaz.Scalaz._
 import scalaz.\/
 
-case class ConsumedCapacity(capacityUnits: Int,
-  tableName: String
-)
-
-
-trait AwsProtocol[REQUEST, RESPONSE, RESULT, A]
-
-object AwsProtocol {
-  implicit def GetItemProtocol[A] = new AwsProtocol[GetItemRequest, GetItemResponse, GetItemResult[A], A] {}
+trait JsonSerializable[A] {
+  def serialize(a: A): DynamoError \/ RequestBody
 }
 
+object JsonSerializable {
+  def apply[A](implicit ev: JsonSerializable[A]) = ev
+}
+
+trait JsonDeserializable[A] {
+  def deserialize(jValue: JValue): A
+}
+
+object JsonDeserializable {
+  def apply[A](implicit ev: JsonDeserializable[A]) = ev
+}
+
+case class ConsumedCapacity(capacityUnits: Int, tableName: String)
 
 case class GetItemRequest(
   attributes: List[String] = List(),
@@ -64,23 +70,3 @@ object GetItemResponse {
 }
 
 case class GetItemResult[A](item: Option[A])
-
-trait JsonSerializable[A] {
-  def serialize(a: A): DynamoError \/ RequestBody
-}
-
-object JsonSerializable {
-  def apply[A](implicit ev: JsonSerializable[A]) = ev
-}
-
-trait JsonDeserializable[A] {
-  def deserialize(jValue: JValue): A
-}
-
-object JsonDeserializable {
-  def apply[A](implicit ev: JsonDeserializable[A]) = ev
-}
-
-trait ToResult[A, B] {
-  def toResult(a: A): DynamoError \/ B
-}

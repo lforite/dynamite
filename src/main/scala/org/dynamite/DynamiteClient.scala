@@ -12,18 +12,19 @@ import scala.concurrent.{ExecutionContext, Future}
 import scalaz.EitherT
 import scalaz.Scalaz._
 
-trait DynamoClient[A] {
-
-  def get(
+trait DynamoClient {
+  def get[A](
     primaryKey: (String, AwsScalarType),
     sortKey: Option[(String, AwsScalarType)],
-    consistentRead: Boolean)(implicit ec: ExecutionContext): Future[Either[DynamoError, GetItemResult[A]]]
+    consistentRead: Boolean)
+    (implicit ec: ExecutionContext,
+      m: Manifest[A]): Future[Either[DynamoError, GetItemResult[A]]]
 }
 
-case class DynamiteClient[A](
+case class DynamiteClient(
   configuration: ClientConfiguration,
-  credentials: AwsCredentials)(implicit m: Manifest[A], ec: ExecutionContext)
-  extends DynamoClient[A]
+  credentials: AwsCredentials)(implicit ec: ExecutionContext)
+  extends DynamoClient
     with AwsJsonWriter
     with AwsJsonReader
     with AwsRequestSigner
@@ -32,38 +33,38 @@ case class DynamiteClient[A](
 
   implicit private val formats = DefaultFormats + new AwsTypeSerializer
 
-  override def get(
+  override def get[A](
     primaryKey: (String, AwsScalarType),
     sortKey: Option[(String, AwsScalarType)] = None,
     consistentRead: Boolean = false)
-    (implicit ec: ExecutionContext): Future[Either[DynamoError, GetItemResult[A]]] = {
-
+    (implicit ec: ExecutionContext, m: Manifest[A]):
+  Future[Either[DynamoError, GetItemResult[A]]] = {
     requestAws[GetItemRequest, GetItemResponse, GetItemResult[A]](
       GetItemRequest(
         key = (Some(primaryKey) :: sortKey :: Nil).flatten,
         table = configuration.table,
         consistentRead = consistentRead),
-      List(
-        AcceptEncodingHeader("identity"),
-        ContentTypeHeader("application/x-amz-json-1.0"),
-        AmazonTargetHeader("DynamoDB_20120810.GetItem")),
-      (res: GetItemResponse) =>
-        GetItemResult[A](fromAws(res.item).extractOpt[A]))
+      AmazonTargetHeader("DynamoDB_20120810.GetItem")) { res: GetItemResponse =>
+      GetItemResult[A](fromAws(res.item).extractOpt[A])
+    }
   }
 
   private def requestAws[REQUEST: JsonSerializable, RESPONSE: JsonDeserializable, RESULT](
     request: REQUEST,
-    headers: List[HttpHeader],
-    respToRes: RESPONSE => RESULT)
+    targetHeader: AmazonTargetHeader)
+    (respToRes: RESPONSE => RESULT)
     (implicit ec: ExecutionContext): Future[Either[DynamoError, RESULT]] = {
     EitherT.fromDisjunction[Future] {
       for {
         awsHost <- configuration.host.getOrElse(configuration.awsRegion.endpoint).right
         dateStamp <- AwsDate(ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime).right
         headers <- (
-          AmazonDateHeader(dateStamp.dateTime) ::
+          AcceptEncodingHeader("identity") ::
+            ContentTypeHeader("application/x-amz-json-1.0") ::
+            AmazonDateHeader(dateStamp.dateTime) ::
             HostHeader(awsHost) ::
-            headers).right
+            targetHeader ::
+            Nil).right
         requestBody <- JsonSerializable[REQUEST].serialize(request)
         signingHeaders <- signRequest(
           httpMethod = HttpMethod.POST,
