@@ -25,7 +25,6 @@ case class DynamiteClient(
   configuration: ClientConfiguration,
   credentials: AwsCredentials)(implicit ec: ExecutionContext)
   extends DynamoClient
-    with AwsJsonReader
     with AwsRequestSigner
     with RequestParser
     with HttpClient {
@@ -44,7 +43,7 @@ case class DynamiteClient(
         table = configuration.table,
         consistentRead = consistentRead),
       AmazonTargetHeader("DynamoDB_20120810.GetItem")) { res: GetItemResponse =>
-      GetItemResult[A](fromAws(res.item).extractOpt[A])
+      GetItemResult[A](AwsJsonReader.fromAws(res.item).extractOpt[A])
     }
   }
 

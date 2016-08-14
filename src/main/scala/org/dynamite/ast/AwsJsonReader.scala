@@ -2,7 +2,7 @@ package org.dynamite.ast
 
 import org.json4s.JsonAST._
 
-trait AwsJsonReader {
+object AwsJsonReader {
   protected[dynamite] def fromAws(json: JValue): JValue = shrinkObject(json)
 
   private val Names = Set("M", "SS")
