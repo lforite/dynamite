@@ -9,7 +9,7 @@ sealed trait AwsScalarType extends AwsType
 case class S(value: String) extends AwsScalarType
 case class N(value: String) extends AwsScalarType
 
-class AwsTypeSerializer extends CustomSerializer[AwsType](format => ( {
+private[dynamite] class AwsTypeSerializer extends CustomSerializer[AwsType](format => ( {
   case JObject(List(JField("S", JString(value)))) => S(value)
   case JObject(List(JField("N", JString(value)))) => N(value)
 }, {

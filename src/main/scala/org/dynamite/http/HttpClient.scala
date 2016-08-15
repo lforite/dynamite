@@ -10,9 +10,9 @@ import scala.concurrent.{ExecutionContext, Future}
 import scalaz.Scalaz._
 import scalaz.{EitherT, \/}
 
-object HttpClient {
+private[dynamite] object HttpClient {
 
-  protected[dynamite] def httpRequest(req: AwsHttpRequest)
+  def httpRequest(req: AwsHttpRequest)
     (implicit ex: ExecutionContext): EitherT[Future, DynamoError, AwsHttpResponse] = {
     EitherT.fromEither[Future, Throwable, Response] {
       Http {
