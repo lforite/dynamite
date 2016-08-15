@@ -16,9 +16,8 @@ trait DynamoClient {
   def get[A](
     primaryKey: (String, AwsScalarType),
     sortKey: Option[(String, AwsScalarType)],
-    consistentRead: Boolean)
-    (implicit ec: ExecutionContext,
-      m: Manifest[A]): Future[Either[DynamoError, GetItemResult[A]]]
+    consistentRead: Boolean)(implicit m: Manifest[A]):
+  Future[Either[DynamoError, GetItemResult[A]]]
 }
 
 case class DynamiteClient(
@@ -31,8 +30,7 @@ case class DynamiteClient(
   override def get[A](
     primaryKey: (String, AwsScalarType),
     sortKey: Option[(String, AwsScalarType)] = None,
-    consistentRead: Boolean = false)
-    (implicit ec: ExecutionContext, m: Manifest[A]):
+    consistentRead: Boolean = false)(implicit m: Manifest[A]):
   Future[Either[DynamoError, GetItemResult[A]]] = {
     requestAws(
       GetItemRequest(
