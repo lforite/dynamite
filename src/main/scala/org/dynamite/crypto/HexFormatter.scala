@@ -1,6 +1,5 @@
 package org.dynamite.crypto
 
-object HexFormatter {
-  protected[dynamite] def toHexFormat(bytes: Array[Byte]) =
-    bytes.map("%02x" format _).mkString
+private[dynamite] object HexFormatter {
+  def toHexFormat(bytes: Array[Byte]) = bytes.map("%02x" format _).mkString
 }

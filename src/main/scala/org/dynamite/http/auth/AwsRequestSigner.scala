@@ -9,7 +9,7 @@ import scalaz.\/
 
 /** AWS Signature V4 first part of the signing protocol; more details at
   * http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html */
-object AwsCanonicalRequestBuilder {
+private[dynamite] object AwsCanonicalRequestBuilder {
   /** Based on the request parameters, create the canonical request */
   def canonicalRequest(
     httpMethod: HttpMethod,
@@ -61,9 +61,9 @@ object AwsCanonicalRequestBuilder {
 
 /** AWS Signature V4 second part of the signing protocol; more details at
   * http://docs.aws.amazon.com/general/latest/gr/sigv4-create-string-to-sign.html */
-object AwsStringToSignBuilder {
+private[dynamite] object AwsStringToSignBuilder {
 
-  protected[dynamite] def stringToSign(
+  def stringToSign(
     awsDate: AwsDate,
     region: AwsRegion,
     service: AwsService,
@@ -85,8 +85,8 @@ object AwsStringToSignBuilder {
 
 /** AWS Signature V4 third part of the signing protocol; more details at
   * http://docs.aws.amazon.com/general/latest/gr/sigv4-create-string-to-sign.html */
-object AwsSigningKeyBuilder {
-  protected[dynamite] def derive(
+private[dynamite] object AwsSigningKeyBuilder {
+  def derive(
     credentials: AwsCredentials,
     dateStamp: DateStamp,
     region: AwsRegion,
@@ -110,8 +110,8 @@ object AwsSigningKeyBuilder {
 }
 
 /** AWS Signature V4 final step of the signing protocol */
-object AwsSignatureBuilder {
-  protected[dynamite] def sign(
+private[dynamite] object AwsSignatureBuilder {
+  def sign(
     signingKey: AwsSigningKey,
     stringToSign: AwsStringToSign): SigningError \/ AwsSignature = {
     (for {
@@ -121,9 +121,8 @@ object AwsSignatureBuilder {
 }
 
 /** The component putting together */
-object AwsRequestSigner {
-
-  protected[dynamite] def signRequest(
+private[dynamite] object AwsRequestSigner {
+  def signRequest(
     httpMethod: HttpMethod,
     uri: Uri,
     queryParameters: List[(String, List[String])],

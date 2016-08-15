@@ -9,8 +9,8 @@ import org.dynamite.dsl._
 import scalaz.Scalaz._
 import scalaz.\/
 
-object HashFunctions {
-  protected[dynamite] def hmacSha256(toEncode: String, key: Array[Byte]): HashingError \/ Array[Byte] =
+private[dynamite] object HashFunctions {
+  def hmacSha256(toEncode: String, key: Array[Byte]): HashingError \/ Array[Byte] =
     for {
       algorithm <- "HmacSHA256".right
       dataBytes <- getBytes(toEncode)
@@ -20,7 +20,7 @@ object HashFunctions {
       result <- \/.fromTryCatchThrowable[Array[Byte], Throwable](mac.doFinal(dataBytes)) leftMap (t => NotInitializedMacError)
     } yield result
 
-  protected[dynamite] def sha256(toEncode: String): HashingError \/ Array[Byte] =
+  def sha256(toEncode: String): HashingError \/ Array[Byte] =
     for {
       algorithm <- "SHA-256".right
       messageDigest <- \/.fromTryCatchThrowable[MessageDigest, Throwable](MessageDigest.getInstance(algorithm)) leftMap (t => AlgorithmNotFoundError(algorithm))
