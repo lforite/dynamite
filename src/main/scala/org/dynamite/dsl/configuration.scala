@@ -1,12 +1,62 @@
 package org.dynamite.dsl
 
-case class ClientConfiguration(table: AwsTable, awsRegion: AwsRegion, host: Option[AwsHost] = None)
+/**
+  * The client configuration to specify which table to query against
+  * and in which region the database is located in. A configuration can be created as follow:
+  *
+  * {{{
+  * ClientConfiguration(AwsTable("students"), AwsRegion.EU_WEST_1)
+  * }}}
+  *
+  * @param table     The table to query against
+  * @param awsRegion The AWS region where the database is located in. See [[org.dynamite.dsl.AwsRegion]]
+  *                  for a complete list of available regions.
+  */
+case class ClientConfiguration(
+  table: AwsTable,
+  awsRegion: AwsRegion)
+
+/**
+  * The standard AWS credentials based on the access key and the secret key.
+  *
+  * @param accessKey The AWS Access Key.
+  * @param secretKey The AWS Secret Key.
+  */
 case class AwsCredentials(accessKey: AwsAccessKey, secretKey: AwsSecretKey)
+
+/**
+  * The Aws Access Key
+  *
+  * @param value the value of the Aws Access Key
+  */
 case class AwsAccessKey(value: String)
+
+/**
+  * The Aws Secret Key
+  *
+  * @param value the value of the Aws Secret Key
+  */
 case class AwsSecretKey(value: String)
+
+/**
+  * The table to execute query against
+  *
+  * @param value the table name
+  */
 case class AwsTable(value: String)
 
+/**
+  * The name of the region in which the DynamoDB instance is located in.
+  *
+  * @param value the name of the region
+  */
 case class AwsRegionName(value: String)
+
+/**
+  * The host to reach the DynamoDB instance.
+  *
+  * @param value the host.
+  */
 case class AwsHost(value: String)
 
 sealed trait AwsRegion {
@@ -14,6 +64,9 @@ sealed trait AwsRegion {
   val endpoint: AwsHost
 }
 
+/**
+  * The complete list of the available AWS regions for DynamoDB
+  */
 object AwsRegion {
 
   /** US East (N. Virginia) */
@@ -81,4 +134,5 @@ object AwsRegion {
     val name = AwsRegionName("sa-east-1")
     val endpoint = AwsHost("dynamodb.sa-east-1.amazonaws.com")
   }
+
 }
