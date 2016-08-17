@@ -12,7 +12,28 @@ import scala.concurrent.{ExecutionContext, Future}
 import scalaz.EitherT
 import scalaz.Scalaz._
 
+/**
+  * The high-level interface to query DynamoDB
+  */
 trait DynamoClient {
+
+  /**
+    * Fetch a single item from DynamoDB. The most basic usage looks like :
+    *
+    * {{{
+    * case class Student(name: String)
+    * client.get[Student]("id" -> S("studentId1")) //yields Future[Either[DynamoError, GetItemResult[Student]]]
+    * }}}
+    *
+    * @param primaryKey     The primary key to identify the record to fetch
+    * @param sortKey        The sort key, to be provided only if a sort key has been specified during table creation
+    * @param consistentRead Set to true for consistent read, false for eventual consistent read
+    * @tparam A The type of the item to fetch
+    * @return The result of the operation, in a plain Scala Future. If everything goes fine,
+    *         the disjunction is right-based and return the result of the operation,
+    *         i.e. the item to fetch as an Option. Otherwise the disjunction is left-based
+    *         and return a meaningful error of what went wrong.
+    */
   def get[A](
     primaryKey: (String, AwsScalarType),
     sortKey: Option[(String, AwsScalarType)],
@@ -20,6 +41,24 @@ trait DynamoClient {
   Future[Either[DynamoError, GetItemResult[A]]]
 }
 
+/**
+  * The main implementation to query DynamoDB. A client is dedicated to a table.
+  * It can be instantiated as follow :
+  *
+  * {{{
+  * val  configuration = ClientConfiguration(AwsTable("students"), AwsRegion.EU_WEST_1)
+  * val credentials = AwsCredentials(AwsAccessKey("awsAccessKey"), AwsSecretKey("awsSecretKey"))
+  * val client = DynamiteClient(configuration, credentials)
+  * }}}
+  *
+  * @param configuration The configuration of the client, to be able to query
+  *                      the right database in the right region.
+  * @param credentials   The credentials to authenticate and authorize the actions
+  *                      done through the client.
+  * @param ec            The execution context the queries are going to be run in.
+  *                      It is advised to have a dedicated execution context for
+  *                      more control over the performances of the client.
+  */
 case class DynamiteClient(
   configuration: ClientConfiguration,
   credentials: AwsCredentials)(implicit ec: ExecutionContext)
@@ -53,7 +92,7 @@ case class DynamiteClient(
   Future[Either[DynamoError, RESULT]] = {
     EitherT.fromDisjunction[Future] {
       for {
-        awsHost <- configuration.host.getOrElse(configuration.awsRegion.endpoint).right
+        awsHost <- configuration.awsRegion.endpoint.right
         dateStamp <- AwsDate(ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime).right
         headers <- (
           AcceptEncodingHeader("identity") ::
