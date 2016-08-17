@@ -1,16 +1,12 @@
 package org.dynamite
 
-import java.time.{ZoneOffset, ZonedDateTime}
-
+import org.dynamite.http.AwsClient.requestAws
 import org.dynamite.ast.{AwsJsonReader, AwsScalarType, AwsTypeSerializer}
 import org.dynamite.dsl.{GetItemRequest, _}
 import org.dynamite.http._
-import org.dynamite.http.auth.AwsRequestSigner
 import org.json4s.DefaultFormats
 
 import scala.concurrent.{ExecutionContext, Future}
-import scalaz.EitherT
-import scalaz.Scalaz._
 
 /**
   * The high-level interface to query DynamoDB
@@ -95,6 +91,8 @@ case class DynamiteClient(
         key = (Some(primaryKey) :: sortKey :: Nil).flatten,
         table = configuration.table,
         consistentRead = consistentRead),
+      configuration.awsRegion,
+      credentials,
       AmazonTargetHeader("DynamoDB_20120810.GetItem")
     ) { res: GetItemResponse =>
       GetItemResult[A](AwsJsonReader.fromAws(res.item).extractOpt[A])
@@ -106,57 +104,11 @@ case class DynamiteClient(
       PutItemRequest(
         item = item,
         table = configuration.table),
+      configuration.awsRegion,
+      credentials,
       AmazonTargetHeader("DynamoDB_20120810.PutItem")
     ) { res: PutItemResponse =>
       PutItemResult(true)
     }
-  }
-
-
-  private def requestAws[REQUEST: JsonSerializable, RESPONSE: JsonDeserializable, RESULT](
-    request: REQUEST,
-    targetHeader: AmazonTargetHeader)
-    (respToRes: RESPONSE => RESULT)
-    (implicit
-      ec: ExecutionContext,
-      protocol: DynamoProtocol[REQUEST, RESPONSE, RESULT]):
-  Future[Either[DynamoError, RESULT]] = {
-    EitherT.fromDisjunction[Future] {
-      for {
-        awsHost <- configuration.awsRegion.endpoint.right
-        dateStamp <- AwsDate(ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime).right
-        headers <- (
-          AcceptEncodingHeader("identity") ::
-            ContentTypeHeader("application/x-amz-json-1.0") ::
-            AmazonDateHeader(dateStamp.dateTime) ::
-            HostHeader(awsHost) ::
-            targetHeader ::
-            Nil).right
-        requestBody <- JsonSerializable[REQUEST].serialize(request)
-        signingHeaders <- AwsRequestSigner.signRequest(
-          httpMethod = HttpMethod.POST,
-          uri = Uri("/"),
-          queryParameters = List(),
-          headers = headers,
-          requestBody = requestBody,
-          awsDate = dateStamp,
-          awsRegion = configuration.awsRegion,
-          awsService = AwsService("dynamodb"),
-          awsCredentials = credentials)
-        signedHeaders <- (AuthorizationHeader(signingHeaders) :: headers).right
-      } yield AwsHttpRequest(awsHost, requestBody, signedHeaders)
-    } flatMap {
-      HttpClient.httpRequest
-    } flatMapF { res =>
-      Future {
-        for {
-          json <- RequestParser.parse(res.responseBody.value)
-        ///add a step to check status code
-        // if 400 or 500 => to error
-          response <- JsonDeserializable[RESPONSE].deserialize(json).right
-          result <- respToRes(response).right
-        } yield result
-      }
-    } toEither
   }
 }
