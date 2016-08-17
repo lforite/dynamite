@@ -1,6 +1,6 @@
 package org.dynamite.dsl
 
-import org.dynamite.ast.{AwsScalarType, AwsTypeSerializer}
+import org.dynamite.ast.{AwsJsonWriter, AwsScalarType, AwsTypeSerializer}
 import org.json4s.Extraction.decompose
 import org.json4s.JsonDSL._
 import org.json4s._
@@ -13,6 +13,8 @@ private[dynamite] trait DynamoProtocol[REQUEST, RESPONSE, RESULT]
 
 private[dynamite] object DynamoProtocol {
   implicit def GetItemProtocol[A] = new DynamoProtocol[GetItemRequest, GetItemResponse, GetItemResult[A]] {}
+
+  implicit def PutItemProtocol[A] = new DynamoProtocol[PutItemRequest[A], PutItemResponse, PutItemResult] {}
 }
 
 private[dynamite] trait JsonSerializable[A] {
@@ -43,10 +45,10 @@ private[dynamite] case class GetItemRequest(
 private[dynamite] object GetItemRequest {
   implicit private val formats = DefaultFormats + new AwsTypeSerializer
 
-  implicit val getItemRequestTypeClass = new JsonSerializable[GetItemRequest] {
+  implicit val toRequestBody = new JsonSerializable[GetItemRequest] {
     def serialize(getItemRequest: GetItemRequest): DynamoError \/ RequestBody = {
       (for {
-        json <- GetItemRequest.toJson(getItemRequest).right
+        json <- toJson(getItemRequest).right
         renderedJson <- render(json).right
         body <- \/.fromTryCatchThrowable[String, Throwable](compact(renderedJson))
       } yield RequestBody(body)) leftMap (e => JsonSerialisationError)
@@ -70,5 +72,56 @@ private[dynamite] object GetItemResponse {
   implicit val fromJson = new JsonDeserializable[GetItemResponse] {
     override def deserialize(jValue: JValue): GetItemResponse =
       GetItemResponse(jValue \ "Item")
+  }
+}
+
+private[dynamite] case class PutItemRequest[A](
+  item: A,
+  conditionExpression: Option[String] = None,
+  expressionAttributeNames: Option[Map[String, String]] = None,
+  expressionAttributeValues: Option[Map[String, String]] = None,
+  returnConsumedCapacity: Option[String] = None,
+  table: AwsTable,
+  returnItemCollectionMetrics: Option[String] = None,
+  returnValues: Option[String] = None
+)
+
+
+private[dynamite] object PutItemRequest {
+
+  implicit private val formats = DefaultFormats + new AwsTypeSerializer
+
+  implicit def toRequestBody[A] = new JsonSerializable[PutItemRequest[A]] {
+    def serialize(putItemRequest: PutItemRequest[A]): DynamoError \/ RequestBody = {
+      (for {
+        json <- toJson(putItemRequest)
+        renderedJson <- render(json).right
+        body <- \/.fromTryCatchThrowable[String, Throwable](compact(renderedJson))
+      } yield RequestBody(body)) leftMap (e => JsonSerialisationError)
+    }
+  }
+
+  def toJson[A](request: PutItemRequest[A])(implicit formats: Formats): DynamoError \/ JValue = {
+    (for {
+      item <- \/.fromTryCatchThrowable[JValue, Throwable](decompose(request.item))
+    } yield {
+      ("Item" -> AwsJsonWriter.toAws(item)) ~
+        ("ConditionExpression" -> request.conditionExpression) ~
+        ("ExpressionAttributeNames" -> request.expressionAttributeNames) ~
+        ("ExpressionAttributeValues" -> request.expressionAttributeValues) ~
+        ("ReturnConsumedCapacity" -> request.returnConsumedCapacity) ~
+        ("TableName" -> request.table.value) ~
+        ("ReturnItemCollectionMetrics" -> request.returnItemCollectionMetrics) ~
+        ("ReturnValue" -> request.returnValues)
+    }) leftMap (e => JsonSerialisationError)
+  }
+}
+
+private[dynamite] case class PutItemResponse(attributes: JValue)
+
+private[dynamite] object PutItemResponse {
+  implicit val fromJson = new JsonDeserializable[PutItemResponse] {
+    override def deserialize(jValue: JValue): PutItemResponse =
+      PutItemResponse(jValue \ "Attributes")
   }
 }

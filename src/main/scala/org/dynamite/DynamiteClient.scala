@@ -39,6 +39,25 @@ trait DynamoClient {
     sortKey: Option[(String, AwsScalarType)],
     consistentRead: Boolean)(implicit m: Manifest[A]):
   Future[Either[DynamoError, GetItemResult[A]]]
+
+  /**
+    * Put a single item in DynamoDB. The put semantic is intended to be the one from HTTP i.e.
+    * it will create an item if it does not exist (identified by the Primary Key + Sort Key)
+    * or replace the existing one. Here is an example on how to use it :
+    *
+    * {{{
+    * case class Student(name: String)
+    * client.put[Student](Student("John Doe")) //yields Future[Either[DynamoError, PutItemResult]]
+    * }}}
+    *
+    * @param item The item to store in DynamoDB
+    * @tparam A The type of the item to store
+    * @return The result of the put operation represented as a disjunction in a plain Scala Future.
+    *         If the operation completes without error, the disjunction will be right based and will contain
+    *         the actual result of the operation. The disjunction will be left based otherwise and will contain
+    *         a meaningful error of what went wrong.
+    */
+  def put[A](item: A)(implicit m: Manifest[A]): Future[Either[DynamoError, PutItemResult]]
 }
 
 /**
@@ -46,7 +65,7 @@ trait DynamoClient {
   * It can be instantiated as follow :
   *
   * {{{
-  * val  configuration = ClientConfiguration(AwsTable("students"), AwsRegion.EU_WEST_1)
+  * val configuration = ClientConfiguration(AwsTable("students"), AwsRegion.EU_WEST_1)
   * val credentials = AwsCredentials(AwsAccessKey("awsAccessKey"), AwsSecretKey("awsSecretKey"))
   * val client = DynamiteClient(configuration, credentials)
   * }}}
@@ -81,6 +100,18 @@ case class DynamiteClient(
       GetItemResult[A](AwsJsonReader.fromAws(res.item).extractOpt[A])
     }
   }
+
+  override def put[A](item: A)(implicit m: Manifest[A]): Future[Either[DynamoError, PutItemResult]] = {
+    requestAws(
+      PutItemRequest(
+        item = item,
+        table = configuration.table),
+      AmazonTargetHeader("DynamoDB_20120810.PutItem")
+    ) { res: PutItemResponse =>
+      PutItemResult(true)
+    }
+  }
+
 
   private def requestAws[REQUEST: JsonSerializable, RESPONSE: JsonDeserializable, RESULT](
     request: REQUEST,
