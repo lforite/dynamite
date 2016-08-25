@@ -1,5 +1,6 @@
 package org.dynamite
 
+import org.dynamite.dsl.StatusCode
 import org.json4s.DefaultFormats
 import org.json4s.JsonAST.{JObject, _}
 import org.json4s.jackson.Serialization.write
@@ -22,6 +23,10 @@ object Arbitraries {
 
   implicit val jsObjectArbitrary = Arbitrary[JObject] {
     genJObject
+  }
+
+  implicit val statusCodesArbitrary = Arbitrary[StatusCode] {
+    Gen.choose(200, 500) map StatusCode
   }
 
   private def genJObject: Gen[JObject] = for {
