@@ -22,7 +22,7 @@ class HttpClientTest
         Firing a request and getting a valid response should yield the response body and the corresponding code $httpRequest
         Firing a request to an unreachable host should yield unreachable host error $unreachableHost
         Firing a request to an invalid host should yield invalid host error $invalidHost
-        Firing a request and getting back an invalid response body  should yield a json parsing error $invalidResponseBody
+        Firing a request and getting back an invalid response body should yield a json parsing error $invalidResponseBody
   """
 
   def httpRequest = prop { (requestBody: ValidJson, responseBody: ValidJson, statusCode: StatusCode, headers: List[HttpHeader]) =>
@@ -50,9 +50,31 @@ class HttpClientTest
     }
   }
 
-  def unreachableHost = ok("OK")
+  def unreachableHost = {
+    withHttpServer { httpServer =>
+      val awsRequest = AwsHttpRequest(
+        AwsHost("unknownhost"),
+        RequestBody("{}"),
+        List())
 
-  def invalidHost = ok("OK")
+      Await.result(HttpClient.httpRequest(awsRequest).toEither, 10 seconds) fold(
+        err => err should be_==(UnreachableHostError("unknownhost")),
+        succ => ko(s"The test is expected to fail but succeeded instead got $succ")
+        )
+    }
+  }
+
+  def invalidHost = {
+    val awsRequest = AwsHttpRequest(
+      AwsHost("  "),
+      RequestBody("{}"),
+      List())
+
+    Await.result(HttpClient.httpRequest(awsRequest).toEither, 10 seconds) fold(
+      err => err should be_==(InvalidHostError("  ")),
+      succ => ko(s"The test is expected to fail but succeeded instead got $succ")
+      )
+  }
 
   def invalidResponseBody = ok("OK")
 

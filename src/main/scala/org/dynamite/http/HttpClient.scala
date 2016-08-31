@@ -1,6 +1,6 @@
 package org.dynamite.http
 
-import java.net.ConnectException
+import java.net.{ConnectException, URISyntaxException}
 
 import com.ning.http.client.Response
 import dispatch._
@@ -14,17 +14,30 @@ private[dynamite] object HttpClient {
 
   def httpRequest(req: AwsHttpRequest)
     (implicit ex: ExecutionContext): EitherT[Future, DynamoError, AwsHttpResponse] = {
-    EitherT.fromEither[Future, Throwable, Response] {
-      Http {
-        host(req.host.value).secure <<
-          req.requestBody.value <:<
-          req.signedHeaders.map(_.render)
-      } either
-    } leftMap[DynamoError] {
-      case ce: ConnectException => UnreachableHostException(req.host.value)
-      case _: Throwable => BasicDynamoError()
+    EitherT.fromDisjunction[Future] {
+      validAwsHost(req.host)
+    } flatMap { awsHost =>
+      EitherT.fromEither[Future, Throwable, Response] {
+        Http {
+          host(req.host.value).secure <<
+            req.requestBody.value <:<
+            req.signedHeaders.map(_.render)
+        } either
+      } leftMap[DynamoError] {
+        case ce: ConnectException => UnreachableHostError(req.host.value)
+        case _: Throwable => BasicDynamoError()
+      }
     } flatMapF { resp =>
       Future.successful(toResponseBody(resp))
+    }
+  }
+
+  private[this] def validAwsHost(awsHost: AwsHost): DynamoError \/ AwsHost = {
+    try {
+      new java.net.URI(awsHost.value)
+      awsHost.right
+    } catch {
+      case u: URISyntaxException => InvalidHostError(awsHost.value).left
     }
   }
 
