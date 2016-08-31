@@ -25,18 +25,21 @@ class HttpClientTest
         Firing a request and getting back an invalid response body  should yield a json parsing error $invalidResponseBody
   """
 
-  def httpRequest = prop { (requestBody: ValidJson, responseBody: ValidJson, statusCode: StatusCode) =>
+  def httpRequest = prop { (requestBody: ValidJson, responseBody: ValidJson, statusCode: StatusCode, headers: List[HttpHeader]) =>
     withHttpServer { httpServer =>
       val awsRequest = AwsHttpRequest(
         AwsHost(s"localhost:${httpServer.httpsPort()}/"),
         RequestBody(requestBody.json),
-        List())
+        headers)
 
-      httpServer.stubFor(WireMock.post(urlEqualTo("/"))
-        .withRequestBody(equalToJson(requestBody.json))
-        .willReturn(aResponse()
-          .withStatus(statusCode.value)
-          .withBody(responseBody.json)))
+      httpServer.stubFor {
+        awsRequest.signedHeaders.foldLeft(post(urlEqualTo("/"))) { (b, header) =>
+          b.withHeader(header.render._1, WireMock.equalTo(header.render._2))
+        }.withRequestBody(equalToJson(requestBody.json))
+          .willReturn(aResponse()
+            .withStatus(statusCode.value)
+            .withBody(responseBody.json))
+      }
 
       Await.result(HttpClient.httpRequest(awsRequest).toEither, 10 seconds) fold(
         err => ko(s"The test is expected to success, got error $err instead"),
