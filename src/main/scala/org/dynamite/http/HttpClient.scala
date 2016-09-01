@@ -25,7 +25,9 @@ private[dynamite] object HttpClient {
         } either
       } leftMap[DynamoError] {
         case ce: ConnectException => UnreachableHostError(req.host.value)
-        case _: Throwable => BasicDynamoError()
+        case t: Throwable =>
+          //TODO: add login, to be addressed in another PR
+          UnexpectedDynamoError("An unexpected error occurred while sending a request to DynamoDB")
       }
     } flatMapF { resp =>
       Future.successful(toResponseBody(resp))
