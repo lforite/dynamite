@@ -120,6 +120,8 @@ case class DynamiteClient(
       Future {
         for {
           json <- RequestParser.parse(res.responseBody.value)
+        ///add a step to check status code
+        // if 400 or 500 => to error
           response <- JsonDeserializable[RESPONSE].deserialize(json).right
           result <- respToRes(response).right
         } yield result

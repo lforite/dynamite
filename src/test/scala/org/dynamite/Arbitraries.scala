@@ -1,5 +1,7 @@
 package org.dynamite
 
+import org.dynamite.dsl.StatusCode
+import org.dynamite.http.HttpHeader
 import org.json4s.DefaultFormats
 import org.json4s.JsonAST.{JObject, _}
 import org.json4s.jackson.Serialization.write
@@ -22,6 +24,21 @@ object Arbitraries {
 
   implicit val jsObjectArbitrary = Arbitrary[JObject] {
     genJObject
+  }
+
+  implicit val statusCodesArbitrary = Arbitrary[StatusCode] {
+    Gen.choose(200, 500) map StatusCode
+  }
+
+  implicit val headersArbitrary = Arbitrary[List[HttpHeader]] {
+    listOfN(choose(0, 30).sample.get, genHeader)
+  }
+
+  private def genHeader: Gen[HttpHeader] = for {
+    id <- identifier
+    anyString <- alphaStr.filter(_.trim.length > 0)
+  } yield new HttpHeader {
+    def render = id -> anyString
   }
 
   private def genJObject: Gen[JObject] = for {
