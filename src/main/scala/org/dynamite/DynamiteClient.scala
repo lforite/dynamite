@@ -1,8 +1,8 @@
 package org.dynamite
 
-import org.dynamite.http.AwsClient.requestAws
 import org.dynamite.ast.{AwsJsonReader, AwsScalarType, AwsTypeSerializer}
 import org.dynamite.dsl.{GetItemRequest, _}
+import org.dynamite.http.AwsClient.post
 import org.dynamite.http._
 import org.json4s.DefaultFormats
 
@@ -86,7 +86,7 @@ case class DynamiteClient(
     sortKey: Option[(String, AwsScalarType)] = None,
     consistentRead: Boolean = false)(implicit m: Manifest[A]):
   Future[Either[DynamoError, GetItemResult[A]]] = {
-    requestAws(
+    post(
       GetItemRequest(
         key = (Some(primaryKey) :: sortKey :: Nil).flatten,
         table = configuration.table,
@@ -99,8 +99,9 @@ case class DynamiteClient(
     }
   }
 
-  override def put[A](item: A)(implicit m: Manifest[A]): Future[Either[DynamoError, PutItemResult]] = {
-    requestAws(
+  override def put[A](item: A)(implicit m: Manifest[A]):
+  Future[Either[DynamoError, PutItemResult]] = {
+    post(
       PutItemRequest(
         item = item,
         table = configuration.table),
@@ -108,7 +109,7 @@ case class DynamiteClient(
       credentials,
       AmazonTargetHeader("DynamoDB_20120810.PutItem")
     ) { res: PutItemResponse =>
-      PutItemResult(true)
+      PutItemResult()
     }
   }
 }

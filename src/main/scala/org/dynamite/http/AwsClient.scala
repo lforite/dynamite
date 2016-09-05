@@ -10,7 +10,7 @@ import scalaz.EitherT
 import scalaz.Scalaz._
 
 private[dynamite] object AwsClient {
-  def requestAws[REQUEST: JsonSerializable, RESPONSE: JsonDeserializable, RESULT](
+  def post[REQUEST: JsonSerializable, RESPONSE: JsonDeserializable, RESULT](
     request: REQUEST,
     region: AwsRegion,
     credentials: AwsCredentials,
