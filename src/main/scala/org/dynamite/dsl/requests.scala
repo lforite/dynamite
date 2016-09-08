@@ -34,7 +34,7 @@ private[dynamite] object JsonDeserializable {
 }
 
 private[dynamite] case class GetItemRequest(
-  attributes: List[String] = List(),
+  attributes: Option[List[String]] = None,
   consistentRead: Boolean = false,
   expressionAttributeNames: Option[Map[String, String]] = None,
   key: List[(String, AwsScalarType)],

@@ -28,5 +28,5 @@ private[dynamite] case class AmazonTargetHeader(value: String) extends HttpHeade
 }
 
 private[dynamite] case class HostHeader(value: AwsHost) extends HttpHeader {
-  def render = "host" -> value.value
+  def render = "Host" -> value.value
 }

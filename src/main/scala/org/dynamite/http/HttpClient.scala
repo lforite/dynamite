@@ -14,6 +14,8 @@ private[dynamite] object HttpClient {
 
   def httpRequest(req: AwsHttpRequest)
     (implicit ex: ExecutionContext): EitherT[Future, DynamoError, AwsHttpResponse] = {
+    //TODO: Add proper debug log
+    println(s"Request body: ${req.requestBody.value}")
     EitherT.fromDisjunction[Future] {
       validAwsHost(req.host)
     } flatMap { awsHost =>
@@ -46,7 +48,7 @@ private[dynamite] object HttpClient {
   private[this] def toResponseBody(resp: Response): DynamoError \/ AwsHttpResponse = {
     for {
       responseBody <- RequestExtractor.extract(resp)
-      _ <- println(responseBody).right
+      _ <- println(s"Response body: $responseBody").right
     } yield AwsHttpResponse(
       org.dynamite.dsl.StatusCode(resp.getStatusCode),
       ResponseBody(responseBody))

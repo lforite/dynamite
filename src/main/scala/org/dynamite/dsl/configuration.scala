@@ -57,7 +57,7 @@ case class AwsRegionName(value: String)
   */
 case class AwsHost(value: String)
 
-sealed trait AwsRegion {
+trait AwsRegion {
   val name: AwsRegionName
   val endpoint: AwsHost
 }
