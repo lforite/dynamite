@@ -14,23 +14,30 @@ private[dynamite] object HttpClient {
 
   def httpRequest(req: AwsHttpRequest)
     (implicit ex: ExecutionContext): EitherT[Future, DynamoError, AwsHttpResponse] = {
+    //TODO: Add proper debug log
+    println(s"Request body: ${req.requestBody.value}")
     EitherT.fromDisjunction[Future] {
       validAwsHost(req.host)
-    } flatMap { awsHost =>
-      EitherT.fromEither[Future, Throwable, Response] {
-        Http {
-          host(req.host.value).secure <<
-            req.requestBody.value <:<
-            req.signedHeaders.map(_.render)
-        } either
-      } leftMap[DynamoError] {
-        case ce: ConnectException => UnreachableHostError(req.host.value)
-        case t: Throwable =>
-          //TODO: add login, to be addressed in another PR
-          UnexpectedDynamoError("An unexpected error occurred while sending a request to DynamoDB")
-      }
+    } flatMap { _ =>
+      post(req)
     } flatMapF { resp =>
       Future.successful(toResponseBody(resp))
+    }
+  }
+
+  private[this] def post(req: AwsHttpRequest)
+    (implicit ex: ExecutionContext): EitherT[Future, DynamoError, Response] = {
+    EitherT.fromEither[Future, Throwable, Response] {
+      Http {
+        host(req.host.value).secure <<
+          req.requestBody.value <:<
+          req.signedHeaders.map(_.render)
+      } either
+    } leftMap[DynamoError] {
+      case ce: ConnectException => UnreachableHostError(req.host.value)
+      case t: Throwable =>
+        //TODO: add login, to be addressed in another PR
+        UnexpectedDynamoError("An unexpected error occurred while sending a request to DynamoDB")
     }
   }
 
@@ -46,7 +53,7 @@ private[dynamite] object HttpClient {
   private[this] def toResponseBody(resp: Response): DynamoError \/ AwsHttpResponse = {
     for {
       responseBody <- RequestExtractor.extract(resp)
-      _ <- println(responseBody).right
+      _ <- println(s"Response body: $responseBody").right
     } yield AwsHttpResponse(
       org.dynamite.dsl.StatusCode(resp.getStatusCode),
       ResponseBody(responseBody))
