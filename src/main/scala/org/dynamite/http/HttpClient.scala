@@ -18,21 +18,26 @@ private[dynamite] object HttpClient {
     println(s"Request body: ${req.requestBody.value}")
     EitherT.fromDisjunction[Future] {
       validAwsHost(req.host)
-    } flatMap { awsHost =>
-      EitherT.fromEither[Future, Throwable, Response] {
-        Http {
-          host(req.host.value).secure <<
-            req.requestBody.value <:<
-            req.signedHeaders.map(_.render)
-        } either
-      } leftMap[DynamoError] {
-        case ce: ConnectException => UnreachableHostError(req.host.value)
-        case t: Throwable =>
-          //TODO: add login, to be addressed in another PR
-          UnexpectedDynamoError("An unexpected error occurred while sending a request to DynamoDB")
-      }
+    } flatMap { _ =>
+      post(req)
     } flatMapF { resp =>
       Future.successful(toResponseBody(resp))
+    }
+  }
+
+  private[this] def post(req: AwsHttpRequest)
+    (implicit ex: ExecutionContext): EitherT[Future, DynamoError, Response] = {
+    EitherT.fromEither[Future, Throwable, Response] {
+      Http {
+        host(req.host.value).secure <<
+          req.requestBody.value <:<
+          req.signedHeaders.map(_.render)
+      } either
+    } leftMap[DynamoError] {
+      case ce: ConnectException => UnreachableHostError(req.host.value)
+      case t: Throwable =>
+        //TODO: add login, to be addressed in another PR
+        UnexpectedDynamoError("An unexpected error occurred while sending a request to DynamoDB")
     }
   }
 
