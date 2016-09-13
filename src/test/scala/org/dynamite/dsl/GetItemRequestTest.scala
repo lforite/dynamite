@@ -16,7 +16,7 @@ class GetItemRequestTest extends Specification { override def is = s2"""
       table = AwsTable("test"))
     )(DefaultFormats + new AwsTypeSerializer) must be_==(
       JObject(
-        "Attributes" -> JArray(Nil),
+        "Attributes" -> JNothing,
         "ConsistentRead" -> JBool(false),
         "ExpressionAttributeNames" -> JNothing,
         "Key" -> JObject("id" -> JObject("S" -> JString("123"))),
