@@ -8,8 +8,15 @@ import org.json4s.jackson.JsonMethods.{parse => jparse}
 import scalaz.\/
 
 private[dynamite] object RequestParser {
+  implicit private val formats = DefaultFormats
+
   def parse(jsonString: String): DynamoError \/ JValue =
     \/.fromTryCatchThrowable[JValue, Throwable](jparse(jsonString)) leftMap {
+      _: Throwable => BasicDynamoError()
+    }
+
+  def parseTo[A](jsonString: String)(implicit mf: scala.reflect.Manifest[A]): DynamoError \/ A =
+    \/.fromTryCatchThrowable[A, Throwable](jparse(jsonString).extract[A]) leftMap {
       _: Throwable => BasicDynamoError()
     }
 }

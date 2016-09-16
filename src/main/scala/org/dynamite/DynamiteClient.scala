@@ -1,7 +1,7 @@
 package org.dynamite
 
 import org.dynamite.ast.{AwsJsonReader, AwsScalarType, AwsTypeSerializer}
-import org.dynamite.dsl.{GetItemRequest, _}
+import org.dynamite.dsl.{GetItemError, GetItemRequest, _}
 import org.dynamite.http.AwsClient.post
 import org.dynamite.http._
 import org.json4s.DefaultFormats
@@ -34,7 +34,7 @@ trait DynamoClient {
     primaryKey: (String, AwsScalarType),
     sortKey: Option[(String, AwsScalarType)],
     consistentRead: Boolean)(implicit m: Manifest[A]):
-  Future[Either[DynamoError, GetItemResult[A]]]
+  Future[Either[GetItemError, GetItemResult[A]]]
 
   /**
     * Put a single item in DynamoDB. The put semantic is intended to be the one from HTTP i.e.
@@ -85,7 +85,7 @@ case class DynamiteClient(
     primaryKey: (String, AwsScalarType),
     sortKey: Option[(String, AwsScalarType)] = None,
     consistentRead: Boolean = false)(implicit m: Manifest[A]):
-  Future[Either[DynamoError, GetItemResult[A]]] = {
+  Future[Either[GetItemError, GetItemResult[A]]] = {
     post(
       GetItemRequest(
         key = (Some(primaryKey) :: sortKey :: Nil).flatten,
@@ -96,6 +96,9 @@ case class DynamiteClient(
       AmazonTargetHeader("DynamoDB_20120810.GetItem")
     ) { res: GetItemResponse =>
       GetItemResult[A](AwsJsonReader.fromAws(res.item).extractOpt[A])
+    } {
+      case e: GetItemError => e
+      case _ => InternalServerError("Not supposed to happen")
     }
   }
 
@@ -110,6 +113,8 @@ case class DynamiteClient(
       AmazonTargetHeader("DynamoDB_20120810.PutItem")
     ) { res: PutItemResponse =>
       PutItemResult()
+    } {
+      case _ => InternalServerError("")
     }
   }
 }

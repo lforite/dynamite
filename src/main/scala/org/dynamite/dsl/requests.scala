@@ -1,6 +1,6 @@
 package org.dynamite.dsl
 
-import org.dynamite.ast.{AwsJsonWriter, AwsScalarType, AwsTypeSerializer}
+import org.dynamite.ast.{AwsJsonWriter, AwsScalarType}
 import org.json4s.Extraction.decompose
 import org.json4s.JsonDSL._
 import org.json4s._
@@ -9,12 +9,12 @@ import org.json4s.jackson.JsonMethods._
 import scalaz.Scalaz._
 import scalaz.\/
 
-private[dynamite] trait DynamoProtocol[REQUEST, RESPONSE, RESULT]
+private[dynamite] trait DynamoProtocol[REQUEST, RESPONSE, RESULT, ERR] {}
 
 private[dynamite] object DynamoProtocol {
-  implicit def GetItemProtocol[A] = new DynamoProtocol[GetItemRequest, GetItemResponse, GetItemResult[A]] {}
+  implicit def GetItemProtocol[A] = new DynamoProtocol[GetItemRequest, GetItemResponse, GetItemResult[A], GetItemError] {}
 
-  implicit def PutItemProtocol[A] = new DynamoProtocol[PutItemRequest[A], PutItemResponse, PutItemResult] {}
+  implicit def PutItemProtocol[A] = new DynamoProtocol[PutItemRequest[A], PutItemResponse, PutItemResult, DynamoError] {}
 }
 
 private[dynamite] trait JsonSerializable[A] {
