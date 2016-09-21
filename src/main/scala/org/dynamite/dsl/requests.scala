@@ -1,6 +1,6 @@
 package org.dynamite.dsl
 
-import org.dynamite.ast.{AwsJsonWriter, AwsScalarType}
+import org.dynamite.ast.{AwsJsonWriter, AwsScalarType, AwsTypeSerializer}
 import org.json4s.Extraction.decompose
 import org.json4s.JsonDSL._
 import org.json4s._
@@ -14,11 +14,11 @@ private[dynamite] trait DynamoProtocol[REQUEST, RESPONSE, RESULT, ERR] {}
 private[dynamite] object DynamoProtocol {
   implicit def GetItemProtocol[A] = new DynamoProtocol[GetItemRequest, GetItemResponse, GetItemResult[A], GetItemError] {}
 
-  implicit def PutItemProtocol[A] = new DynamoProtocol[PutItemRequest[A], PutItemResponse, PutItemResult, DynamoError] {}
+  implicit def PutItemProtocol[A] = new DynamoProtocol[PutItemRequest[A], PutItemResponse, PutItemResult, DynamoCommonError] {}
 }
 
 private[dynamite] trait JsonSerializable[A] {
-  def serialize(a: A): DynamoError \/ RequestBody
+  def serialize(a: A): DynamoCommonError \/ RequestBody
 }
 
 private[dynamite] object JsonSerializable {
@@ -46,7 +46,7 @@ private[dynamite] object GetItemRequest {
   implicit private val formats = DefaultFormats + new AwsTypeSerializer
 
   implicit val toRequestBody = new JsonSerializable[GetItemRequest] {
-    def serialize(getItemRequest: GetItemRequest): DynamoError \/ RequestBody = {
+    def serialize(getItemRequest: GetItemRequest): DynamoCommonError \/ RequestBody = {
       (for {
         json <- toJson(getItemRequest).right
         renderedJson <- render(json).right
@@ -92,7 +92,7 @@ private[dynamite] object PutItemRequest {
   implicit private val formats = DefaultFormats + new AwsTypeSerializer
 
   implicit def toRequestBody[A] = new JsonSerializable[PutItemRequest[A]] {
-    def serialize(putItemRequest: PutItemRequest[A]): DynamoError \/ RequestBody = {
+    def serialize(putItemRequest: PutItemRequest[A]): DynamoCommonError \/ RequestBody = {
       (for {
         json <- toJson(putItemRequest)
         renderedJson <- render(json).right
@@ -101,7 +101,7 @@ private[dynamite] object PutItemRequest {
     }
   }
 
-  def toJson[A](request: PutItemRequest[A])(implicit formats: Formats): DynamoError \/ JValue = {
+  def toJson[A](request: PutItemRequest[A])(implicit formats: Formats): DynamoCommonError \/ JValue = {
     (for {
       item <- \/.fromTryCatchThrowable[JValue, Throwable](decompose(request.item))
     } yield {

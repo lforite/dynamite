@@ -5,18 +5,18 @@ import javax.crypto.spec.SecretKeySpec
 import org.json4s.CustomSerializer
 import org.json4s.JsonAST.{JField, JObject, JString}
 
+sealed trait GetItemError
+
 /** more info at http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/CommonErrors.html */
-sealed trait DynamoError
+sealed trait DynamoCommonError extends GetItemError
 
-case class BasicDynamoError() extends DynamoError
-case class UnreachableHostError(host: String) extends DynamoError
-case class InvalidHostError(host: String) extends DynamoError
-case class UnexpectedDynamoError(message: String) extends DynamoError
-case object JsonSerialisationError extends DynamoError
+case class BasicDynamoError() extends DynamoCommonError
+case class UnreachableHostError(host: String) extends DynamoCommonError
+case class InvalidHostError(host: String) extends DynamoCommonError
+case class UnexpectedDynamoError(message: String) extends DynamoCommonError
+case object JsonSerialisationError extends DynamoCommonError
 
-case class SigningError(error: String) extends DynamoError
-
-sealed trait GetItemError extends DynamoError
+case class SigningError(error: String) extends DynamoCommonError
 
 /**
   * Your request rate is too high. Reduce the frequency of
@@ -29,7 +29,6 @@ sealed trait GetItemError extends DynamoError
   */
 case class ProvisionedThroughputExceededError(description: String)
   extends AwsError
-    with DynamoError
     with GetItemError
 
 /**
@@ -39,7 +38,7 @@ case class ProvisionedThroughputExceededError(description: String)
   *
   * @param description A detailed description of what went wrong
   */
-case class ResourceNotFoundException(description: String)
+case class ResourceNotFoundError(description: String)
   extends AwsError
     with GetItemError
 
@@ -59,11 +58,11 @@ case class ServiceUnavailableError(description: String)
   extends AwsError
     with GetItemError
 
-trait AwsError extends DynamoError {
+trait AwsError {
   val description: String
 }
 
-private[dynamite] class AwsTypeSerializer extends CustomSerializer[AwsError](format => ( {
+private[dynamite] class AwsErrorSerializer extends CustomSerializer[AwsError](format => ( {
   case JObject(List(JField("__type", JString(value)), JField("description", JString(description)))) => AwsError.test(value, description)
   case _ => InternalServerError("dedeeqeqeq")
 }, { case _ => JString("")}))
@@ -83,7 +82,7 @@ object AwsError {
       //case "LimitExceededException" => "Too many operations for a given subscriber." //might happen
       case "ProvisionedThroughputExceededException" => ProvisionedThroughputExceededError(description)
       //case "ResourceInUseException" => "The resource which you are attempting to change is in use." //might happen
-      case "ResourceNotFoundException" => ResourceNotFoundException(description)
+      case "ResourceNotFoundException" => ResourceNotFoundError(description)
       //case "ThrottlingException" => "Rate of requests exceeds the allowed throughput." //might happen
       //case "UnrecognizedClientException" => "The Access Key ID or security token is invalid."   //might happen
       //case "ValidationException" => "Varies, depending upon the specific error(s) encountered" //might happen

@@ -53,7 +53,7 @@ trait DynamoClient {
     *         the actual result of the operation. The disjunction will be left based otherwise and will contain
     *         a meaningful error of what went wrong.
     */
-  def put[A](item: A)(implicit m: Manifest[A]): Future[Either[DynamoError, PutItemResult]]
+  def put[A](item: A)(implicit m: Manifest[A]): Future[Either[DynamoCommonError, PutItemResult]]
 }
 
 /**
@@ -86,7 +86,7 @@ case class DynamiteClient(
     sortKey: Option[(String, AwsScalarType)] = None,
     consistentRead: Boolean = false)(implicit m: Manifest[A]):
   Future[Either[GetItemError, GetItemResult[A]]] = {
-    post(
+    post[GetItemRequest, GetItemResponse, GetItemResult[A], GetItemError](
       GetItemRequest(
         key = (Some(primaryKey) :: sortKey :: Nil).flatten,
         table = configuration.table,
@@ -97,13 +97,12 @@ case class DynamiteClient(
     ) { res: GetItemResponse =>
       GetItemResult[A](AwsJsonReader.fromAws(res.item).extractOpt[A])
     } {
-      case e: GetItemError => e
       case _ => InternalServerError("Not supposed to happen")
     }
   }
 
   override def put[A](item: A)(implicit m: Manifest[A]):
-  Future[Either[DynamoError, PutItemResult]] = {
+  Future[Either[DynamoCommonError, PutItemResult]] = {
     post(
       PutItemRequest(
         item = item,
@@ -114,7 +113,7 @@ case class DynamiteClient(
     ) { res: PutItemResponse =>
       PutItemResult()
     } {
-      case _ => InternalServerError("")
+      case _ => BasicDynamoError()
     }
   }
 }
