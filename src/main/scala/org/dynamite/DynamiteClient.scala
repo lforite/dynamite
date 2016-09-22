@@ -96,14 +96,12 @@ case class DynamiteClient(
       AmazonTargetHeader("DynamoDB_20120810.GetItem")
     ) { res: GetItemResponse =>
       GetItemResult[A](AwsJsonReader.fromAws(res.item).extractOpt[A])
-    } {
-      case _ => InternalServerError("Not supposed to happen")
     }
   }
 
   override def put[A](item: A)(implicit m: Manifest[A]):
   Future[Either[DynamoCommonError, PutItemResult]] = {
-    post(
+    post[PutItemRequest[A], PutItemResponse, PutItemResult, DynamoCommonError](
       PutItemRequest(
         item = item,
         table = configuration.table),
@@ -112,8 +110,6 @@ case class DynamiteClient(
       AmazonTargetHeader("DynamoDB_20120810.PutItem")
     ) { res: PutItemResponse =>
       PutItemResult()
-    } {
-      case _ => BasicDynamoError()
     }
   }
 }

@@ -16,7 +16,6 @@ private[dynamite] object AwsClient {
     credentials: AwsCredentials,
     targetHeader: AmazonTargetHeader)
     (respToRes: RESPONSE => RESULT)
-    (toErrors: PartialFunction[AwsError, ERR])
     (implicit
       ec: ExecutionContext,
       protocol: DynamoProtocol[REQUEST, RESPONSE, RESULT, ERR]):
@@ -29,7 +28,7 @@ private[dynamite] object AwsClient {
       _.asInstanceOf[ERR]
     } flatMap { res =>
       EitherT.fromDisjunction[Future] {
-        toResult(res, respToRes, toErrors)
+        toResult(res, respToRes, protocol.toErrors)
       }
     } toEither
   }

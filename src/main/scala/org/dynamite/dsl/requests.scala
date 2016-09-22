@@ -9,12 +9,37 @@ import org.json4s.jackson.JsonMethods._
 import scalaz.Scalaz._
 import scalaz.\/
 
-private[dynamite] trait DynamoProtocol[REQUEST, RESPONSE, RESULT, ERR] {}
+private[dynamite] trait DynamoProtocol[REQUEST, RESPONSE, RESULT, ERR >: DynamoCommonError] {
+
+  def toErrors: PartialFunction[AwsError, ERR] = toErrorsSpecific orElse toErrorsDefault
+
+  private val toErrorsDefault: PartialFunction[AwsError, ERR] = {
+    case e =>
+      //todo : unexpected error here
+      UnexpectedDynamoError("Unexpected")
+  }
+
+  protected val toErrorsSpecific: PartialFunction[AwsError, ERR]
+}
 
 private[dynamite] object DynamoProtocol {
-  implicit def GetItemProtocol[A] = new DynamoProtocol[GetItemRequest, GetItemResponse, GetItemResult[A], GetItemError] {}
+  implicit val formats = DefaultFormats + new AwsTypeSerializer
 
-  implicit def PutItemProtocol[A] = new DynamoProtocol[PutItemRequest[A], PutItemResponse, PutItemResult, DynamoCommonError] {}
+  implicit def GetItemProtocol[A] = new DynamoProtocol[GetItemRequest, GetItemResponse, GetItemResult[A], GetItemError] {
+
+    val toErrorsSpecific: PartialFunction[AwsError, GetItemError] = {
+      case ise: InternalServerError => ise
+      case su: ServiceUnavailableError => su
+      case rne: ResourceNotFoundError => rne
+      case ce: DynamoCommonError => ce
+    }
+  }
+
+  implicit def PutItemProtocol[A] = new DynamoProtocol[PutItemRequest[A], PutItemResponse, PutItemResult, DynamoCommonError] {
+    val toErrorsSpecific: PartialFunction[AwsError, DynamoCommonError] = {
+      case _ => BasicDynamoError()
+    }
+  }
 }
 
 private[dynamite] trait JsonSerializable[A] {
@@ -101,7 +126,7 @@ private[dynamite] object PutItemRequest {
     }
   }
 
-  def toJson[A](request: PutItemRequest[A])(implicit formats: Formats): DynamoCommonError \/ JValue = {
+  private def toJson[A](request: PutItemRequest[A])(implicit formats: Formats): DynamoCommonError \/ JValue = {
     (for {
       item <- \/.fromTryCatchThrowable[JValue, Throwable](decompose(request.item))
     } yield {
