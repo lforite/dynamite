@@ -26,8 +26,8 @@ private[dynamite] object AwsClient {
       HttpClient.httpRequest
     } leftMap {
       _.asInstanceOf[ERR]
-    } flatMap { res =>
-      EitherT.fromDisjunction[Future] {
+    } flatMapF { res =>
+      Future.successful {
         toResult(res, respToRes, protocol.toErrors)
       }
     } toEither
@@ -74,11 +74,9 @@ private[dynamite] object AwsClient {
     } yield result
   }
 
-
   /**
     * According to http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.Components
     */
-  //here we need a partial function that is going to take an awsResponse and transform it to a ERR
   private[this] def checkErrors[ERR >: DynamoCommonError](
     awsHttpResponse: AwsHttpResponse,
     toErrors: PartialFunction[AwsError, ERR]): ERR \/ AwsHttpResponse = {

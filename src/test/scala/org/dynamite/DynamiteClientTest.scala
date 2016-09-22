@@ -13,13 +13,11 @@ import scala.concurrent.duration._
 
 case class Dummy(id: String, test: String)
 
-class DynamiteClientTest extends Specification with HttpServer {
-  def is =
-    s2"""
+class DynamiteClientTest extends Specification with HttpServer { def is = s2"""
       Specifications for the DynamiteClient
         Getting an existing item should return this item $get
         Getting a non existing item should return None $getNotFound
-        Targeting a non-existent table should return ResourceNotFoundError $getResourceNotFound
+        Targeting a non-existent table should yield a ResourceNotFoundError $getResourceNotFound
         Put an existing item should return success $put
   """
 

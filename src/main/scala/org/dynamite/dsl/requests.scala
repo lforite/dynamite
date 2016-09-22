@@ -28,10 +28,7 @@ private[dynamite] object DynamoProtocol {
   implicit def GetItemProtocol[A] = new DynamoProtocol[GetItemRequest, GetItemResponse, GetItemResult[A], GetItemError] {
 
     val toErrorsSpecific: PartialFunction[AwsError, GetItemError] = {
-      case ise: InternalServerError => ise
-      case su: ServiceUnavailableError => su
-      case rne: ResourceNotFoundError => rne
-      case ce: DynamoCommonError => ce
+      case e: GetItemError => e
     }
   }
 
