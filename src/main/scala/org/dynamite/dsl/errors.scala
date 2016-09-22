@@ -63,8 +63,8 @@ trait AwsError {
 }
 
 private[dynamite] class AwsErrorSerializer extends CustomSerializer[AwsError](format => ( {
-  case JObject(List(JField("__type", JString(value)), JField("description", JString(description)))) => AwsError.test(value, description)
-  case _ => InternalServerError("dedeeqeqeq")
+  case JObject(List(JField("__type", JString(value)), JField("message", JString(description)))) => AwsError.test(value, description)
+  case e => InternalServerError("dedeeqeqeq")
 }, { case _ => JString("")}))
 
 object AwsError {

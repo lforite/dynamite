@@ -19,6 +19,7 @@ class DynamiteClientTest extends Specification with HttpServer {
       Specifications for the DynamiteClient
         Getting an existing item should return this item $get
         Getting a non existing item should return None $getNotFound
+        Targeting a non-existent table should return ResourceNotFoundError $getResourceNotFound
         Put an existing item should return success $put
   """
 
@@ -67,6 +68,31 @@ class DynamiteClientTest extends Specification with HttpServer {
     }
 
     Await.result(client.get[Dummy]("id" -> S("id")), 10 seconds) must be_==(Right(GetItemResult(None)))
+  }
+
+  def getResourceNotFound = withHttpServer { httpServer =>
+    val host: AwsHost = AwsHost(s"localhost:${httpServer.httpsPort()}")
+    val client = setupClient(host)
+
+    val errorMessage = "Requested resource not found: Table: dummy_table not found"
+
+    httpServer.stubFor {
+      post(urlEqualTo("/"))
+        .withHeader("Accept-Encoding", new EqualToPattern("identity"))
+        .withHeader("Content-Type", new EqualToPattern("application/x-amz-json-1.0"))
+        .withHeader("X-Amz-Date", new AnythingPattern(""))
+        .withHeader("Host", new EqualToPattern(host.value))
+        .withHeader("X-Amz-Target", new EqualToPattern("DynamoDB_20120810.GetItem"))
+        .withHeader("Authorization", new ContainsPattern("Credential"))
+        .withRequestBody(equalToJson("""{"ConsistentRead":false,"Key":{"id":{"S":"id"}},"TableName":"dummy_table"}"""))
+        .willReturn {
+          aResponse()
+            .withStatus(400)
+            .withBody(s"""{"__type":"com.amazonaws.dynamodb.v20120810#ResourceNotFoundException","message":"$errorMessage"}""")
+        }
+    }
+
+    Await.result(client.get[Dummy]("id" -> S("id")), 10 seconds) must be_==(Left(ResourceNotFoundError(errorMessage)))
   }
 
   def put = withHttpServer { httpServer =>
