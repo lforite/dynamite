@@ -98,11 +98,12 @@ private[dynamite] class AwsErrorSerializer extends CustomSerializer[AwsError](fo
   case JObject(List(JField("__type", JString(value)), JField("message", JString(description)))) => AwsError(value, description)
   case e =>
     //todo: add some logging here
-    //todo: which error should be thrown ?
-    InternalServerError("dedeeqeqeq")
-}, {
-  case _ => JObject()
-}))
+    UnrecognizedAwsError("Dynamite was not able to understand the response from DynamoDB")
+},
+  //We are not interested in serialising those errors so this is a Dummy place holder
+  {
+    case _ => JObject()
+  }))
 
 sealed trait HashingError
 case class EncodingNotFoundError(encoding: String) extends HashingError

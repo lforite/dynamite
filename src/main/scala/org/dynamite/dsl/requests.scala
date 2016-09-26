@@ -15,8 +15,7 @@ private[dynamite] trait DynamoProtocol[REQUEST, RESPONSE, RESULT, ERR >: DynamoC
 
   private val toErrorsDefault: PartialFunction[AwsError, ERR] = {
     case e =>
-      //todo : unexpected error here
-      UnexpectedDynamoError("Unexpected")
+      UnrecognizedAwsError(s"The error $e occurred by was not expected.")
   }
 
   protected val toErrorsSpecific: PartialFunction[AwsError, ERR]
