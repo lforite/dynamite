@@ -6,15 +6,15 @@ import org.json4s.CustomSerializer
 import org.json4s.JsonAST.{JField, JObject, JString}
 
 sealed trait GetItemError
+sealed trait PutItemError
 
 /** more info at http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/CommonErrors.html */
-sealed trait DynamoCommonError extends GetItemError
-
-case class BasicDynamoError() extends DynamoCommonError //TODO: remove it
+sealed trait DynamoCommonError extends GetItemError with PutItemError
 case class UnreachableHostError(host: String) extends DynamoCommonError
 case class InvalidHostError(host: String) extends DynamoCommonError
 case class UnexpectedDynamoError(message: String) extends DynamoCommonError
 case object JsonSerialisationError extends DynamoCommonError
+case class JsonDeserialisationError(message: String) extends DynamoCommonError
 
 case class SigningError(error: String) extends DynamoCommonError
 
@@ -65,8 +65,8 @@ case class InvalidCredentialsError(description: String)
 
 
 /**
-  * This error should not happen, it would indicate a that a case has not been covered with the parsing of
-  * @param description
+  * This error should not happen, it would indicate a that a case has not been covered with the parsing of DynamoDB error
+  * @param description A detailed description of what went wrong
   */
 case class UnrecognizedAwsError(description: String)
   extends AwsError
@@ -98,7 +98,7 @@ private[dynamite] class AwsErrorSerializer extends CustomSerializer[AwsError](fo
   case JObject(List(JField("__type", JString(value)), JField("message", JString(description)))) => AwsError(value, description)
   case e =>
     //todo: add some logging here
-    UnrecognizedAwsError("Dynamite was not able to understand the response from DynamoDB")
+    UnrecognizedAwsError("Dynamite was not able to understand the resp onse from DynamoDB")
 },
   //We are not interested in serialising those errors so this is a Dummy place holder
   {

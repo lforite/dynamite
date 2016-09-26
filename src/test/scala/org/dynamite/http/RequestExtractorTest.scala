@@ -7,7 +7,7 @@ import java.util
 
 import com.ning.http.client.cookie.Cookie
 import com.ning.http.client.{FluentCaseInsensitiveStringsMap, Response}
-import org.dynamite.dsl.BasicDynamoError
+import org.dynamite.dsl.JsonDeserialisationError
 import org.specs2.Specification
 
 class RequestExtractorTest extends Specification { def is = s2"""
@@ -25,7 +25,7 @@ class RequestExtractorTest extends Specification { def is = s2"""
 
   private def extractKo = {
     RequestExtractor.extract(new ResponseMock(new IOException("IOException occurred"))) fold(
-      err => err should be_==(BasicDynamoError()),
+      err => err should haveClass[JsonDeserialisationError],
       succ => ko("It should be an error")
       )
   }
