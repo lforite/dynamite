@@ -1,7 +1,9 @@
 package org.dynamite
 
+import org.dynamite.action.get.{GetItemRequest, GetItemResponse}
+import org.dynamite.action.put.{GetItemResult, PutItemRequest, PutItemResponse, PutItemResult}
 import org.dynamite.ast.{AwsJsonReader, AwsScalarType, AwsTypeSerializer}
-import org.dynamite.dsl.{GetItemError, GetItemRequest, _}
+import org.dynamite.dsl.{AwsCredentials, ClientConfiguration, GetItemError, PutItemError}
 import org.dynamite.http.AwsClient.post
 import org.dynamite.http._
 import org.json4s.DefaultFormats
