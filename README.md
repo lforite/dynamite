@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/louis-forite/dynamite.png?branch=master)](https://travis-ci.org/louis-forite/dynamite)
+
 # Dynamite
 
 A type-safe, reactive, native Scala client for the popular DynamoDB database.
