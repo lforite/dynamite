@@ -15,15 +15,15 @@ private[dynamite] object HashFunctions {
       algorithm <- "HmacSHA256".right
       dataBytes <- getBytes(toEncode)
       secretKey <- new SecretKeySpec(key, algorithm).right
-      mac <- \/.fromTryCatchThrowable[Mac, Throwable](Mac.getInstance(algorithm)) leftMap (t => AlgorithmNotFoundError(algorithm))
-      _ <- \/.fromTryCatchThrowable[Unit, Throwable](mac.init(secretKey)) leftMap (t => InvalidSecretKeyError(secretKey))
-      result <- \/.fromTryCatchThrowable[Array[Byte], Throwable](mac.doFinal(dataBytes)) leftMap (t => NotInitializedMacError)
+      mac <- \/.fromTryCatchNonFatal[Mac](Mac.getInstance(algorithm)) leftMap (t => AlgorithmNotFoundError(algorithm))
+      _ <- \/.fromTryCatchNonFatal[Unit](mac.init(secretKey)) leftMap (t => InvalidSecretKeyError(secretKey))
+      result <- \/.fromTryCatchNonFatal[Array[Byte]](mac.doFinal(dataBytes)) leftMap (t => NotInitializedMacError)
     } yield result
 
   def sha256(toEncode: String): HashingError \/ Array[Byte] =
     for {
       algorithm <- "SHA-256".right
-      messageDigest <- \/.fromTryCatchThrowable[MessageDigest, Throwable](MessageDigest.getInstance(algorithm)) leftMap (t => AlgorithmNotFoundError(algorithm))
+      messageDigest <- \/.fromTryCatchNonFatal[MessageDigest](MessageDigest.getInstance(algorithm)) leftMap (t => AlgorithmNotFoundError(algorithm))
       toEncodeBytes <- getBytes(toEncode)
       _ <- messageDigest.update(toEncodeBytes).right
       result <- messageDigest.digest().right
@@ -31,6 +31,6 @@ private[dynamite] object HashFunctions {
 
 
   private def getBytes(toConvert: String): EncodingNotFoundError \/ Array[Byte] = {
-    \/.fromTryCatchThrowable[Array[Byte], Throwable](toConvert.getBytes("UTF-8")) leftMap (t => EncodingNotFoundError("UTF-8"))
+    \/.fromTryCatchNonFatal[Array[Byte]](toConvert.getBytes("UTF-8")) leftMap (t => EncodingNotFoundError("UTF-8"))
   }
 }

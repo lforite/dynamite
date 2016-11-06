@@ -71,7 +71,7 @@ private[dynamite] object GetItemRequest {
       (for {
         json <- toJson(getItemRequest).right
         renderedJson <- render(json).right
-        body <- \/.fromTryCatchThrowable[String, Throwable](compact(renderedJson))
+        body <- \/.fromTryCatchNonFatal[String](compact(renderedJson))
       } yield RequestBody(body)) leftMap (e => JsonSerialisationError)
     }
   }
@@ -117,14 +117,14 @@ private[dynamite] object PutItemRequest {
       (for {
         json <- toJson(putItemRequest)
         renderedJson <- render(json).right
-        body <- \/.fromTryCatchThrowable[String, Throwable](compact(renderedJson))
+        body <- \/.fromTryCatchNonFatal[String](compact(renderedJson))
       } yield RequestBody(body)) leftMap (e => JsonSerialisationError)
     }
   }
 
   private def toJson[A](request: PutItemRequest[A])(implicit formats: Formats): DynamoCommonError \/ JValue = {
     (for {
-      item <- \/.fromTryCatchThrowable[JValue, Throwable](decompose(request.item))
+      item <- \/.fromTryCatchNonFatal[JValue](decompose(request.item))
     } yield {
       ("Item" -> AwsJsonWriter.toAws(item)) ~
         ("ConditionExpression" -> request.conditionExpression) ~

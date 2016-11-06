@@ -11,14 +11,14 @@ private[dynamite] object RequestParser {
   implicit private val formats = DefaultFormats + new AwsErrorSerializer
 
   def parse(jsonString: String): DynamoCommonError \/ JValue =
-    \/.fromTryCatchThrowable[JValue, Throwable](jparse(jsonString)) leftMap {
+    \/.fromTryCatchNonFatal[JValue](jparse(jsonString)) leftMap {
       _: Throwable =>
         //todo: add proper debug log here
         JsonDeserialisationError(s"The json $jsonString is not a valid string and was impossible to parse.")
     }
 
   def parseTo[A](jsonString: String)(implicit mf: scala.reflect.Manifest[A]): DynamoCommonError \/ A =
-    \/.fromTryCatchThrowable[A, Throwable](jparse(jsonString).extract[A]) leftMap {
+    \/.fromTryCatchNonFatal[A](jparse(jsonString).extract[A]) leftMap {
       t: Throwable =>
         //todo: add proper debug log here
         println(t)
@@ -28,7 +28,7 @@ private[dynamite] object RequestParser {
 
 private[dynamite] object RequestExtractor {
   def extract(resp: Response): DynamoCommonError \/ String =
-    \/.fromTryCatchThrowable[String, Throwable](resp.getResponseBody) leftMap {
+    \/.fromTryCatchNonFatal[String](resp.getResponseBody) leftMap {
       _: Throwable =>
         //todo: add proper debug log here
         JsonDeserialisationError("An error occurred while trying to read response from DynamoDB")
