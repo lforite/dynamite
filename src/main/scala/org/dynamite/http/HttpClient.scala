@@ -13,7 +13,7 @@ import scalaz.{EitherT, \/}
 private[dynamite] object HttpClient {
 
   def httpRequest(req: AwsHttpRequest)
-    (implicit ex: ExecutionContext): EitherT[Future, DynamoError, AwsHttpResponse] = {
+    (implicit ex: ExecutionContext): EitherT[Future, DynamoCommonError, AwsHttpResponse] = {
     //TODO: Add proper debug log
     println(s"Request body: ${req.requestBody.value}")
     EitherT.fromDisjunction[Future] {
@@ -26,14 +26,14 @@ private[dynamite] object HttpClient {
   }
 
   private[this] def post(req: AwsHttpRequest)
-    (implicit ex: ExecutionContext): EitherT[Future, DynamoError, Response] = {
+    (implicit ex: ExecutionContext): EitherT[Future, DynamoCommonError, Response] = {
     EitherT.fromEither[Future, Throwable, Response] {
       Http {
         host(req.host.value).secure <<
           req.requestBody.value <:<
           req.signedHeaders.map(_.render)
       } either
-    } leftMap[DynamoError] {
+    } leftMap[DynamoCommonError] {
       case ce: ConnectException => UnreachableHostError(req.host.value)
       case t: Throwable =>
         //TODO: add login, to be addressed in another PR
@@ -41,7 +41,7 @@ private[dynamite] object HttpClient {
     }
   }
 
-  private[this] def validAwsHost(awsHost: AwsHost): DynamoError \/ AwsHost = {
+  private[this] def validAwsHost(awsHost: AwsHost): DynamoCommonError \/ AwsHost = {
     try {
       new java.net.URI(awsHost.value)
       awsHost.right
@@ -50,7 +50,7 @@ private[dynamite] object HttpClient {
     }
   }
 
-  private[this] def toResponseBody(resp: Response): DynamoError \/ AwsHttpResponse = {
+  private[this] def toResponseBody(resp: Response): DynamoCommonError \/ AwsHttpResponse = {
     for {
       responseBody <- RequestExtractor.extract(resp)
       _ <- println(s"Response body: $responseBody").right
