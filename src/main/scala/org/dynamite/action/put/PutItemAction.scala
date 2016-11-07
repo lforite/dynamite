@@ -13,7 +13,8 @@ object PutItemAction {
   def put[A](
     configuration: ClientConfiguration,
     credentials: AwsCredentials,
-    item: A)(implicit ec: ExecutionContext):
+    item: A
+  )(implicit ec: ExecutionContext):
   Future[Either[PutItemError, PutItemResult]] = {
     post[PutItemRequest[A], PutItemResponse, PutItemResult, PutItemError](
       PutItemRequest(
