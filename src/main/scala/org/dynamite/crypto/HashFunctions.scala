@@ -4,8 +4,6 @@ import java.security.MessageDigest
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
-import org.dynamite.dsl._
-
 import scalaz.Scalaz._
 import scalaz.\/
 
