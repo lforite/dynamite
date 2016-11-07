@@ -39,15 +39,13 @@ private[dynamite] object AwsClient {
     credentials: AwsCredentials,
     targetHeader: AmazonTargetHeader): DynamoCommonError \/ AwsHttpRequest = {
     for {
-      dateStamp <- AwsDate(ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime).right
-      headers <- (
-        AcceptEncodingHeader("identity") ::
-          ContentTypeHeader("application/x-amz-json-1.0") ::
-          AmazonDateHeader(dateStamp.dateTime) ::
-          HostHeader(region.endpoint) ::
-          targetHeader ::
-          Nil).right
       requestBody <- JsonSerializable[REQUEST].serialize(request)
+      dateStamp = AwsDate(ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime)
+      headers = AcceptEncodingHeader("identity") ::
+        ContentTypeHeader("application/x-amz-json-1.0") ::
+        AmazonDateHeader(dateStamp.dateTime) ::
+        HostHeader(region.endpoint) ::
+        targetHeader :: Nil
       signingHeaders <- AwsRequestSigner.signRequest(
         httpMethod = HttpMethod.POST,
         uri = Uri("/"),
@@ -58,7 +56,7 @@ private[dynamite] object AwsClient {
         awsRegion = region,
         awsService = AwsService("dynamodb"),
         awsCredentials = credentials)
-      signedHeaders <- (AuthorizationHeader(signingHeaders) :: headers).right
+      signedHeaders = AuthorizationHeader(signingHeaders) :: headers
     } yield AwsHttpRequest(region.endpoint, requestBody, signedHeaders)
   }
 
@@ -69,8 +67,8 @@ private[dynamite] object AwsClient {
     for {
       _ <- checkErrors(res, toErrors)
       json <- RequestParser.parse(res.responseBody.value)
-      response <- JsonDeserializable[RESPONSE].deserialize(json).right
-      result <- respToRes(response).right
+      response = JsonDeserializable[RESPONSE].deserialize(json)
+      result = respToRes(response)
     } yield result
   }
 

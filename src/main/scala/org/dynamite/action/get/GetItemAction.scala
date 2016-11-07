@@ -1,0 +1,39 @@
+package org.dynamite.action.get
+
+import org.dynamite.action.put.GetItemResult
+import org.dynamite.ast.{AwsJsonReader, AwsScalarType, AwsTypeSerializer}
+import org.dynamite.dsl.{AwsCredentials, ClientConfiguration, GetItemError}
+import org.dynamite.http.{AmazonTargetHeader, AwsClient}
+import org.json4s.DefaultFormats
+
+import scala.concurrent.{ExecutionContext, Future}
+
+object GetItemAction {
+
+  implicit private val formats = DefaultFormats + new AwsTypeSerializer
+
+  private lazy val GetTargetHeader = AmazonTargetHeader("DynamoDB_20120810.GetItem")
+
+  def get[A](
+    configuration: ClientConfiguration,
+    credentials: AwsCredentials,
+    primaryKey: (String, AwsScalarType),
+    sortKey: Option[(String, AwsScalarType)] = None,
+    consistentRead: Boolean = false
+  )(implicit ec: ExecutionContext, m: Manifest[A]):
+  Future[Either[GetItemError, GetItemResult[A]]] = {
+    AwsClient.post[GetItemRequest, GetItemResponse, GetItemResult[A], GetItemError](
+      GetItemRequest(
+        key = (Some(primaryKey) :: sortKey :: Nil).flatten,
+        table = configuration.table,
+        consistentRead = consistentRead),
+      configuration.awsRegion,
+      credentials,
+      GetTargetHeader
+    )(responseToResult)
+  }
+
+  private def responseToResult[A](res: GetItemResponse)(implicit m: Manifest[A]): GetItemResult[A] = {
+    GetItemResult[A](AwsJsonReader.fromAws(res.item).extractOpt[A])
+  }
+}
