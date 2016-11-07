@@ -13,7 +13,6 @@ case class InvalidHostError(host: String) extends DynamoCommonError
 case class UnexpectedDynamoError(message: String) extends DynamoCommonError
 case object JsonSerialisationError extends DynamoCommonError
 case class JsonDeserialisationError(message: String) extends DynamoCommonError
-
 case class SigningError(error: String) extends DynamoCommonError
 
 /**
@@ -28,6 +27,7 @@ case class SigningError(error: String) extends DynamoCommonError
 case class ProvisionedThroughputExceededError(description: String)
   extends AwsError
     with GetItemError
+    with PutItemError
 
 /**
   * The operation tried to access a nonexistent table or index. The
@@ -39,36 +39,62 @@ case class ProvisionedThroughputExceededError(description: String)
 case class ResourceNotFoundError(description: String)
   extends AwsError
     with GetItemError
+    with PutItemError
 
 /**
   * An internal error occurred on DynamoDB side. You might retry your request.
+  *
   * @param description A detailed description of what went wrong
   */
 case class InternalServerError(description: String)
   extends AwsError
     with GetItemError
+    with PutItemError
 
 /**
   * DynamoDB is currently unavailable. (This should be a temporary state.). You might retry your request.
+  *
   * @param description A detailed description of what went wrong
   */
 case class ServiceUnavailableError(description: String)
   extends AwsError
     with GetItemError
+    with PutItemError
 
 
 case class InvalidCredentialsError(description: String)
   extends AwsError
-    with DynamoCommonError
-
+    with GetItemError
+    with PutItemError
 
 /**
   * This error should not happen, it would indicate a that a case has not been covered with the parsing of DynamoDB error
+  *
   * @param description A detailed description of what went wrong
   */
 case class UnrecognizedAwsError(description: String)
   extends AwsError
     with DynamoCommonError
+
+
+/**
+  * A condition specified in the operation could not be evaluated.
+  *
+  * @param description A detailed description of what went wrong
+  */
+case class ConditionalCheckFailedError(description: String)
+  extends AwsError
+    with PutItemError
+
+/**
+  * An item collection is too large. This exception is only returned for tables
+  * that have one or more local secondary indexes.
+  *
+  * @param description A detailed description of what went wrong
+  */
+case class ItemCollectionSizeLimitExceededError(description: String)
+  extends AwsError
+    with PutItemError
 
 trait AwsError {
   val description: String
@@ -81,12 +107,8 @@ object AwsError {
       case "ProvisionedThroughputExceededException" => ProvisionedThroughputExceededError(description)
       case "ResourceNotFoundException" => ResourceNotFoundError(description)
       case "InternalServerException" => InternalServerError(description)
-      //case "ConditionalCheckFailedException" => "You specified a condition that evaluated to false."//might happen
-      //case "ItemCollectionSizeLimitExceededException" => "Collection size exceeded." //might happen
-      //case "LimitExceededException" => "Too many operations for a given subscriber." //might happen
-      //case "ResourceInUseException" => "The resource which you are attempting to change is in use." //might happen
-      //case "ThrottlingException" => "Rate of requests exceeds the allowed throughput." //might happen
-      //case "ValidationException" => "Varies, depending upon the specific error(s) encountered" //might happen
+      case "ConditionalCheckFailedException" => ConditionalCheckFailedError(description)
+      case "ItemCollectionSizeLimitExceededException" => ItemCollectionSizeLimitExceededError(description)
       case _ => UnrecognizedAwsError(description)
     }
   }
