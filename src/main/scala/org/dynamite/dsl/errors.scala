@@ -1,7 +1,5 @@
 package org.dynamite.dsl
 
-import javax.crypto.spec.SecretKeySpec
-
 import org.json4s.CustomSerializer
 import org.json4s.JsonAST.{JField, JObject, JString}
 
@@ -104,9 +102,3 @@ private[dynamite] class AwsErrorSerializer extends CustomSerializer[AwsError](fo
   {
     case _ => JObject()
   }))
-
-sealed trait HashingError
-case class EncodingNotFoundError(encoding: String) extends HashingError
-case class AlgorithmNotFoundError(algorithm: String) extends HashingError
-case class InvalidSecretKeyError(key: SecretKeySpec) extends HashingError
-case object NotInitializedMacError extends HashingError

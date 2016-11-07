@@ -1,5 +1,6 @@
 package org.dynamite.dsl
 
+import org.dynamite.action.get.GetItemRequest
 import org.dynamite.ast.{AwsTypeSerializer, S}
 import org.json4s.JsonAST.JObject
 import org.json4s._

@@ -1,10 +1,9 @@
 package org.dynamite
 
-import org.dynamite.ast.{AwsJsonReader, AwsScalarType, AwsTypeSerializer}
-import org.dynamite.dsl.{GetItemError, GetItemRequest, _}
-import org.dynamite.http.AwsClient.post
-import org.dynamite.http._
-import org.json4s.DefaultFormats
+import org.dynamite.action.get.GetItemAction
+import org.dynamite.action.put._
+import org.dynamite.ast.AwsScalarType
+import org.dynamite.dsl.{AwsCredentials, ClientConfiguration, GetItemError, PutItemError}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -53,7 +52,7 @@ trait DynamoClient {
     *         the actual result of the operation. The disjunction will be left based otherwise and will contain
     *         a meaningful error of what went wrong.
     */
-  def put[A](item: A)(implicit m: Manifest[A]): Future[Either[PutItemError, PutItemResult]]
+  def put[A](item: A): Future[Either[PutItemError, PutItemResult]]
 }
 
 /**
@@ -79,37 +78,16 @@ case class DynamiteClient(
   credentials: AwsCredentials)(implicit ec: ExecutionContext)
   extends DynamoClient {
 
-  implicit private val formats = DefaultFormats + new AwsTypeSerializer
-
   override def get[A](
     primaryKey: (String, AwsScalarType),
     sortKey: Option[(String, AwsScalarType)] = None,
     consistentRead: Boolean = false)(implicit m: Manifest[A]):
   Future[Either[GetItemError, GetItemResult[A]]] = {
-    post[GetItemRequest, GetItemResponse, GetItemResult[A], GetItemError](
-      GetItemRequest(
-        key = (Some(primaryKey) :: sortKey :: Nil).flatten,
-        table = configuration.table,
-        consistentRead = consistentRead),
-      configuration.awsRegion,
-      credentials,
-      AmazonTargetHeader("DynamoDB_20120810.GetItem")
-    ) { res: GetItemResponse =>
-      GetItemResult[A](AwsJsonReader.fromAws(res.item).extractOpt[A])
-    }
+    GetItemAction.get(configuration, credentials, primaryKey, sortKey, consistentRead)
   }
 
-  override def put[A](item: A)(implicit m: Manifest[A]):
+  override def put[A](item: A):
   Future[Either[PutItemError, PutItemResult]] = {
-    post[PutItemRequest[A], PutItemResponse, PutItemResult, PutItemError](
-      PutItemRequest(
-        item = item,
-        table = configuration.table),
-      configuration.awsRegion,
-      credentials,
-      AmazonTargetHeader("DynamoDB_20120810.PutItem")
-    ) { res: PutItemResponse =>
-      PutItemResult()
-    }
+    PutItemAction.put(configuration, credentials, item)
   }
 }

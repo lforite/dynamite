@@ -2,6 +2,7 @@ package org.dynamite
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.matching._
+import org.dynamite.action.put.{GetItemResult, PutItemResult}
 import org.dynamite.ast.S
 import org.dynamite.dsl._
 import org.dynamite.http.HttpServer
