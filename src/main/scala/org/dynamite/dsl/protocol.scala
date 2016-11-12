@@ -2,8 +2,6 @@ package org.dynamite.dsl
 
 import org.dynamite.action.get.{GetItemRequest, GetItemResponse}
 import org.dynamite.action.put.{GetItemResult, PutItemRequest, PutItemResponse, PutItemResult}
-import org.dynamite.ast.AwsTypeSerializer
-import org.json4s.DefaultFormats
 
 private[dynamite] trait DynamoProtocol[REQUEST, RESPONSE, RESULT, ERR >: DynamoCommonError] {
 
@@ -18,7 +16,6 @@ private[dynamite] trait DynamoProtocol[REQUEST, RESPONSE, RESULT, ERR >: DynamoC
 }
 
 private[dynamite] object DynamoProtocol {
-  implicit val formats = DefaultFormats + new AwsTypeSerializer
 
   implicit def GetItemProtocol[A] = new DynamoProtocol[GetItemRequest, GetItemResponse, GetItemResult[A], GetItemError] {
 

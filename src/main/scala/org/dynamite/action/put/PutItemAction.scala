@@ -14,7 +14,7 @@ object PutItemAction {
     configuration: ClientConfiguration,
     credentials: AwsCredentials,
     item: A
-  )(implicit ec: ExecutionContext):
+  )(implicit ec: ExecutionContext, m: Manifest[A]):
   Future[Either[PutItemError, PutItemResult]] = {
     post[PutItemRequest[A], PutItemResponse, PutItemResult, PutItemError](
       PutItemRequest(

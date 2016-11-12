@@ -1,14 +1,13 @@
 package org.dynamite.http
 
 import com.ning.http.client.Response
-import org.dynamite.dsl.{AwsErrorSerializer, DynamoCommonError, JsonDeserialisationError}
-import org.json4s._
+import org.dynamite.dsl.{DynamoCommonError, JsonDeserialisationError}
+import org.json4s.JsonAST.JValue
 import org.json4s.jackson.JsonMethods.{parse => jparse}
 
 import scalaz.\/
 
 private[dynamite] object RequestParser {
-  implicit private val formats = DefaultFormats + new AwsErrorSerializer
 
   def parse(jsonString: String): DynamoCommonError \/ JValue =
     \/.fromTryCatchNonFatal[JValue](jparse(jsonString)) leftMap {
@@ -17,14 +16,19 @@ private[dynamite] object RequestParser {
         JsonDeserialisationError(s"The json $jsonString is not a valid string and was impossible to parse.")
     }
 
-  def parseTo[A](jsonString: String)(implicit mf: scala.reflect.Manifest[A]): DynamoCommonError \/ A =
+
+  def parseTo[A](jsonString: String)(implicit mf: scala.reflect.Manifest[A]): DynamoCommonError \/ A = {
+    import org.dynamite.dsl.Format._
+
     \/.fromTryCatchNonFatal[A](jparse(jsonString).extract[A]) leftMap {
       t: Throwable =>
         //todo: add proper debug log here
         println(t)
         JsonDeserialisationError(s"An error occurred while trying to deserialise $jsonString")
     }
+  }
 }
+
 
 private[dynamite] object RequestExtractor {
   def extract(resp: Response): DynamoCommonError \/ String =

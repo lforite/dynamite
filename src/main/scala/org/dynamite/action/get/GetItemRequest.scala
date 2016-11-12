@@ -1,12 +1,11 @@
 package org.dynamite.action.get
 
-import org.dynamite.ast.{AwsScalarType, AwsTypeSerializer}
+import org.dynamite.ast.AwsScalarType
 import org.dynamite.dsl._
 import org.json4s.Extraction._
-import org.json4s.jackson.JsonMethods._
-import org.json4s.{DefaultFormats, Formats, _}
 import org.json4s.JsonDSL._
 import org.json4s._
+import org.json4s.jackson.JsonMethods._
 
 import scalaz.Scalaz._
 import scalaz.\/
@@ -21,10 +20,10 @@ private[dynamite] case class GetItemRequest(
   table: AwsTable)
 
 private[dynamite] object GetItemRequest {
-  implicit private val formats = DefaultFormats + new AwsTypeSerializer
 
   implicit val toRequestBody = new JsonSerializable[GetItemRequest] {
     def serialize(getItemRequest: GetItemRequest): DynamoCommonError \/ RequestBody = {
+      import org.dynamite.dsl.Format._
       (for {
         json <- toJson(getItemRequest).right
         renderedJson <- render(json).right

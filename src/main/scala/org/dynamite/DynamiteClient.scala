@@ -52,7 +52,7 @@ trait DynamoClient {
     *         the actual result of the operation. The disjunction will be left based otherwise and will contain
     *         a meaningful error of what went wrong.
     */
-  def put[A](item: A): Future[Either[PutItemError, PutItemResult]]
+  def put[A](item: A)(implicit m: Manifest[A]): Future[Either[PutItemError, PutItemResult]]
 }
 
 /**
@@ -86,7 +86,7 @@ case class DynamiteClient(
     GetItemAction.get(configuration, credentials, primaryKey, sortKey, consistentRead)
   }
 
-  override def put[A](item: A):
+  override def put[A](item: A)(implicit m: Manifest[A]):
   Future[Either[PutItemError, PutItemResult]] = {
     PutItemAction.put(configuration, credentials, item)
   }

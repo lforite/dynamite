@@ -1,16 +1,14 @@
 package org.dynamite.action.get
 
 import org.dynamite.action.put.GetItemResult
-import org.dynamite.ast.{AwsJsonReader, AwsScalarType, AwsTypeSerializer}
+import org.dynamite.ast.{AwsJsonReader, AwsScalarType}
+import org.dynamite.dsl.Format._
 import org.dynamite.dsl.{AwsCredentials, ClientConfiguration, GetItemError}
 import org.dynamite.http.{AmazonTargetHeader, AwsClient}
-import org.json4s.DefaultFormats
 
 import scala.concurrent.{ExecutionContext, Future}
 
 object GetItemAction {
-
-  implicit private val formats = DefaultFormats + new AwsTypeSerializer
 
   private lazy val GetTargetHeader = AmazonTargetHeader("DynamoDB_20120810.GetItem")
 

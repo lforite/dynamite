@@ -2,19 +2,17 @@ package org.dynamite
 
 import org.dynamite.dsl.StatusCode
 import org.dynamite.http.HttpHeader
-import org.json4s.DefaultFormats
 import org.json4s.JsonAST.{JObject, _}
 import org.json4s.jackson.Serialization.write
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen.{oneOf, _}
 import org.scalacheck.{Arbitrary, Gen}
+import org.dynamite.dsl.Format._
 
 /** Encapsulate a valid json as a string */
 case class ValidJson(json: String)
 
 object Arbitraries {
-
-  implicit private val formats = DefaultFormats
 
   implicit val validJsonArbitrary = Arbitrary[ValidJson] {
     for {

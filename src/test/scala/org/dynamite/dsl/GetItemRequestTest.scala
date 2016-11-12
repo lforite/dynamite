@@ -1,9 +1,9 @@
 package org.dynamite.dsl
 
 import org.dynamite.action.get.GetItemRequest
-import org.dynamite.ast.{AwsTypeSerializer, S}
-import org.json4s.JsonAST.JObject
-import org.json4s._
+import org.dynamite.ast.S
+import org.dynamite.dsl.Format._
+import org.json4s.JsonAST.{JBool, JNothing, JObject, JString}
 import org.specs2.mutable.Specification
 
 class GetItemRequestTest extends Specification { override def is = s2"""
@@ -15,7 +15,7 @@ class GetItemRequestTest extends Specification { override def is = s2"""
     GetItemRequest.toJson(GetItemRequest(
       key = List("id" -> S("123")),
       table = AwsTable("test"))
-    )(DefaultFormats + new AwsTypeSerializer) must be_==(
+    ) must be_==(
       JObject(
         "Attributes" -> JNothing,
         "ConsistentRead" -> JBool(false),
