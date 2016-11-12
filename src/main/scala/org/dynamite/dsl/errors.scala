@@ -5,9 +5,10 @@ import org.json4s.JsonAST.{JField, JObject, JString}
 
 sealed trait GetItemError
 sealed trait PutItemError
+sealed trait DeleteItemError
 
 /** more info at http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/CommonErrors.html */
-sealed trait DynamoCommonError extends GetItemError with PutItemError
+sealed trait DynamoCommonError extends GetItemError with PutItemError with DeleteItemError
 case class UnreachableHostError(host: String) extends DynamoCommonError
 case class InvalidHostError(host: String) extends DynamoCommonError
 case class UnexpectedDynamoError(message: String) extends DynamoCommonError

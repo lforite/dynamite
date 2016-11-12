@@ -3,9 +3,10 @@ package org.dynamite
 import dynamo.ast.DynamoScalarType
 import dynamo.ast.reads.DynamoRead
 import dynamo.ast.writes.DynamoWrite
+import org.dynamite.action.delete.{DeleteItemAction, DeleteItemResult}
 import org.dynamite.action.get.GetItemAction
 import org.dynamite.action.put._
-import org.dynamite.dsl.{AwsCredentials, ClientConfiguration, GetItemError, PutItemError}
+import org.dynamite.dsl._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -92,4 +93,12 @@ case class DynamiteClient(
   Future[Either[PutItemError, PutItemResult]] = {
     PutItemAction.put(configuration, credentials, item)
   }
+
+  def delete(
+    primaryKey: (String, DynamoScalarType),
+    sortKey: Option[(String, DynamoScalarType)] = None
+  ): Future[Either[DeleteItemError, DeleteItemResult]] = {
+    DeleteItemAction.delete(configuration, credentials, primaryKey, sortKey)
+  }
+
 }
