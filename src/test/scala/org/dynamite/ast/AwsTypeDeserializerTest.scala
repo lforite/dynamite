@@ -17,7 +17,6 @@ class AwsTypeDeserializerTest extends Specification with ScalaCheck { override d
 
   import org.dynamite.dsl.Format.defaultFormats
 
-
   def sField = prop { str: String =>
     JObject("S" -> JString(str)).extract[AwsType] match {
       case S(value) => value must_== str
@@ -72,6 +71,12 @@ class AwsTypeDeserializerTest extends Specification with ScalaCheck { override d
     JObject("NULL" -> JBool(true)).extract[AwsType] match {
       case NULL => success
       case _ => failure
+    }
+  }
+
+  def rootField = {
+    JObject("test" -> JObject("N" -> JString("-1"))).extract[AwsType] match {
+      case ROOT(elems) => elems.size must_== 1
     }
   }
 

@@ -12,9 +12,10 @@ object AwsTypesArbitraries {
   implicit val LArb: Arbitrary[L] = Arbitrary[L] { LGen }
   implicit val NSArb: Arbitrary[NS] = Arbitrary[NS] { NSGen }
   implicit val SSArb: Arbitrary[SS] = Arbitrary[SS] { SSGen }
+  implicit val AwsTypeArb: Arbitrary[AwsType] = Arbitrary[AwsType] { AwsTypeGen }
+  implicit val RootArb: Arbitrary[ROOT] = Arbitrary[ROOT] { ROOTGen }
 
-
-  def AwsType: Gen[AwsType] = frequency(
+  def AwsTypeGen: Gen[AwsType] = frequency(
     (5,
       delay(SimpleTypeGen)),
     (1, delay(oneOf(LGen, NSGen, SSGen, MGen, Gen.const(NULL))))
@@ -27,14 +28,18 @@ object AwsTypesArbitraries {
   def NSGen = listOfN(size, NGen) map (s => NS(s.toSet))
   def SSGen = listOfN(size, SGen) map (s => SS(s.toSet))
 
-  def LGen: Gen[L] = listOfN(size, AwsType) map L
+  def LGen: Gen[L] = listOfN(size, AwsTypeGen) map L
   def SimpleTypeGen: Gen[AwsScalarType] = oneOf(SGen, NGen, BOOLGen)
 
   def kvGen: Gen[(String, AwsType)] = for {
     key <- identifier
-    value <- AwsType
+    value <- AwsTypeGen
   } yield (key, value)
 
 
-  private def size = choose(0, 3).sample.get
+  def ROOTGen: Gen[ROOT] = {
+    listOfN(size, kvGen) map ROOT
+  }
+
+  private def size = choose(0, 5).sample.get
 }

@@ -46,6 +46,11 @@ case class SS(strings: Set[S]) extends AwsType
   */
 case object NULL extends AwsType
 
+/**
+  * Represent the root object
+  */
+private[dynamite] case class ROOT(elems: List[(String, AwsType)]) extends AwsType
+
 
 private[dynamite] class AwsTypeSerializer extends CustomSerializer[AwsType](format => (AwsTypeSerializer.JValueToAwsType, AwsTypeSerializer.AwsTypeToJValue))
 
@@ -67,6 +72,7 @@ object AwsTypeSerializer {
     case JObject(List(JField("NS", JArray(elems)))) => NS(elems map NPf toSet)
     case JObject(List(JField("SS", JArray(elems)))) => SS(elems map SPf toSet)
     case JObject(List(JField("NULL", _))) => NULL
+    case JObject(elems) => ROOT(elems.map(kv => kv._1 -> JValueToAwsType(kv._2)))
   }
 
   val AwsTypeToJValue: PartialFunction[Any, JValue] = {
@@ -75,8 +81,9 @@ object AwsTypeSerializer {
     case BOOL(value) => JObject("BOOL" -> JBool(value))
     case L(values) => JObject(JField("L", JArray(values map AwsTypeToJValue)))
     case M(kvs) => JObject(JField("M", JObject(kvs map (kv => kv._1 -> AwsTypeToJValue(kv._2)))))
-    case NS(values) => JObject(JField("NS", JArray(values map AwsTypeToJValue toList)))
-    case SS(values) => JObject(JField("SS", JArray(values map AwsTypeToJValue toList)))
+    case NS(values) => JObject(JField("NS", JArray(values.map(n => JString(n.value)) toList)))
+    case SS(values) => JObject(JField("SS", JArray(values.map(s => JString(s.value)) toList)))
     case NULL => JObject(JField("NULL", JBool(true)))
+    case ROOT(elems) => JObject(elems.map(kv => kv._1 -> AwsTypeToJValue(kv._2)))
   }
 }
