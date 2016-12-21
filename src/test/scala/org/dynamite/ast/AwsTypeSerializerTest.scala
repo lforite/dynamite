@@ -1,5 +1,6 @@
 package org.dynamite.ast
 
+import dynamo.ast._
 import org.dynamite.ast.AwsTypesArbitraries._
 import org.json4s.Extraction._
 import org.json4s.JsonAST._
@@ -30,7 +31,7 @@ class AwsTypeSerializerTest extends Specification with ScalaCheck { override def
     decompose(bool) must_== JObject("BOOL" -> JBool(bool.value))
   }
 
-  def lField = prop { l: L =>
+  def lField = prop { l: L[DynamoType] =>
     val decomposed = decompose(l)
     decomposed.isInstanceOf[JObject] must_== true
     decomposed.asInstanceOf[JObject].obj.head._1 must_== "L"
@@ -43,7 +44,7 @@ class AwsTypeSerializerTest extends Specification with ScalaCheck { override def
     decomposed.isInstanceOf[JObject] must_== true
     decomposed.asInstanceOf[JObject].obj.head._1 must_== "M"
     decomposed.asInstanceOf[JObject].obj.head._2.isInstanceOf[JObject] must_== true
-    decomposed.asInstanceOf[JObject].obj.head._2.asInstanceOf[JObject].obj.length must_== m.elems.length
+    decomposed.asInstanceOf[JObject].obj.head._2.asInstanceOf[JObject].obj.length must_== m.elements.length
   }
 
   def nsField = prop { ns: NS =>

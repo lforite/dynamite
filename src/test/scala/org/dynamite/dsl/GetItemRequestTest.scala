@@ -1,7 +1,7 @@
 package org.dynamite.dsl
 
+import dynamo.ast.S
 import org.dynamite.action.get.GetItemRequest
-import org.dynamite.ast.S
 import org.dynamite.dsl.Format._
 import org.json4s.JsonAST.{JBool, JNothing, JObject, JString}
 import org.specs2.mutable.Specification

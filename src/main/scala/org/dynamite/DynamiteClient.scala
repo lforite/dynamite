@@ -1,8 +1,8 @@
 package org.dynamite
 
+import dynamo.ast.DynamoScalarType
 import org.dynamite.action.get.GetItemAction
 import org.dynamite.action.put._
-import org.dynamite.ast.AwsScalarType
 import org.dynamite.dsl.{AwsCredentials, ClientConfiguration, GetItemError, PutItemError}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,8 +30,8 @@ trait DynamoClient {
     *         and return a meaningful error of what went wrong.
     */
   def get[A](
-    primaryKey: (String, AwsScalarType),
-    sortKey: Option[(String, AwsScalarType)],
+    primaryKey: (String, DynamoScalarType),
+    sortKey: Option[(String, DynamoScalarType)],
     consistentRead: Boolean)(implicit m: Manifest[A]):
   Future[Either[GetItemError, GetItemResult[A]]]
 
@@ -79,8 +79,8 @@ case class DynamiteClient(
   extends DynamoClient {
 
   override def get[A](
-    primaryKey: (String, AwsScalarType),
-    sortKey: Option[(String, AwsScalarType)] = None,
+    primaryKey: (String, DynamoScalarType),
+    sortKey: Option[(String, DynamoScalarType)] = None,
     consistentRead: Boolean = false)(implicit m: Manifest[A]):
   Future[Either[GetItemError, GetItemResult[A]]] = {
     GetItemAction.get(configuration, credentials, primaryKey, sortKey, consistentRead)

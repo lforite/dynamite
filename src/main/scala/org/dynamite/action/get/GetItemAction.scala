@@ -1,7 +1,8 @@
 package org.dynamite.action.get
 
+import dynamo.ast.DynamoScalarType
 import org.dynamite.action.put.GetItemResult
-import org.dynamite.ast.{AwsJsonReader, AwsScalarType}
+import org.dynamite.ast.AwsJsonReader
 import org.dynamite.dsl.Format._
 import org.dynamite.dsl.{AwsCredentials, ClientConfiguration, GetItemError}
 import org.dynamite.http.{AmazonTargetHeader, AwsClient}
@@ -15,8 +16,8 @@ object GetItemAction {
   def get[A](
     configuration: ClientConfiguration,
     credentials: AwsCredentials,
-    primaryKey: (String, AwsScalarType),
-    sortKey: Option[(String, AwsScalarType)] = None,
+    primaryKey: (String, DynamoScalarType),
+    sortKey: Option[(String, DynamoScalarType)] = None,
     consistentRead: Boolean = false
   )(implicit ec: ExecutionContext, m: Manifest[A]):
   Future[Either[GetItemError, GetItemResult[A]]] = {
