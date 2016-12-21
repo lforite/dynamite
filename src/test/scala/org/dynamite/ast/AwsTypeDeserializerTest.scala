@@ -77,6 +77,7 @@ class AwsTypeDeserializerTest extends Specification with ScalaCheck { override d
   def rootField = {
     JObject("test" -> JObject("N" -> JString("-1"))).extract[AwsType] match {
       case ROOT(elems) => elems.size must_== 1
+      case _ => failure
     }
   }
 
