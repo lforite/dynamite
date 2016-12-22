@@ -2,6 +2,7 @@ package org.dynamite
 
 import dynamo.ast.DynamoScalarType
 import dynamo.ast.reads.DynamoRead
+import dynamo.ast.writes.DynamoWrite
 import org.dynamite.action.get.GetItemAction
 import org.dynamite.action.put._
 import org.dynamite.dsl.{AwsCredentials, ClientConfiguration, GetItemError, PutItemError}
@@ -53,7 +54,7 @@ trait DynamoClient {
     *         the actual result of the operation. The disjunction will be left based otherwise and will contain
     *         a meaningful error of what went wrong.
     */
-  def put[A](item: A)(implicit m: Manifest[A]): Future[Either[PutItemError, PutItemResult]]
+  def put[A](item: A)(implicit m: DynamoWrite[A]): Future[Either[PutItemError, PutItemResult]]
 }
 
 /**
@@ -87,7 +88,7 @@ case class DynamiteClient(
     GetItemAction.get(configuration, credentials, primaryKey, sortKey, consistentRead)
   }
 
-  override def put[A](item: A)(implicit m: Manifest[A]):
+  override def put[A](item: A)(implicit m: DynamoWrite[A]):
   Future[Either[PutItemError, PutItemResult]] = {
     PutItemAction.put(configuration, credentials, item)
   }

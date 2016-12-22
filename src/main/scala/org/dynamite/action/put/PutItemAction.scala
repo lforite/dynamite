@@ -1,5 +1,6 @@
 package org.dynamite.action.put
 
+import dynamo.ast.writes.DynamoWrite
 import org.dynamite.dsl.{AwsCredentials, ClientConfiguration, PutItemError}
 import org.dynamite.http.AmazonTargetHeader
 import org.dynamite.http.AwsClient._
@@ -15,11 +16,11 @@ object PutItemAction {
     configuration: ClientConfiguration,
     credentials: AwsCredentials,
     item: A
-  )(implicit ec: ExecutionContext, m: Manifest[A]):
+  )(implicit ec: ExecutionContext, m: DynamoWrite[A]):
   Future[Either[PutItemError, PutItemResult]] = {
     post[PutItemRequest[A], PutItemResponse, PutItemResult, PutItemError](
       PutItemRequest(
-        item = item,
+        item = m.write(item),
         table = configuration.table),
       configuration.awsRegion,
       credentials,

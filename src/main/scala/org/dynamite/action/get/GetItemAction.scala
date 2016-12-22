@@ -1,8 +1,9 @@
 package org.dynamite.action.get
 
+import dynamo.ast.DynamoScalarType
 import dynamo.ast.reads.{DynamoRead, DynamoReadError, DynamoReadSuccess}
-import dynamo.ast.{DynamoScalarType, DynamoType, M}
 import org.dynamite.action.put.GetItemResult
+import org.dynamite.ast.ROOT
 import org.dynamite.dsl.Format._
 import org.dynamite.dsl.{AwsCredentials, ClientConfiguration, GetItemError, JsonDeserialisationError}
 import org.dynamite.http.{AmazonTargetHeader, AwsClient}
@@ -15,11 +16,11 @@ object GetItemAction {
   private lazy val GetTargetHeader = AmazonTargetHeader("DynamoDB_20120810.GetItem")
 
   def get[A](
-    configuration: ClientConfiguration,
-    credentials: AwsCredentials,
-    primaryKey: (String, DynamoScalarType),
-    sortKey: Option[(String, DynamoScalarType)] = None,
-    consistentRead: Boolean = false
+      configuration: ClientConfiguration,
+      credentials: AwsCredentials,
+      primaryKey: (String, DynamoScalarType),
+      sortKey: Option[(String, DynamoScalarType)] = None,
+      consistentRead: Boolean = false
   )(implicit ec: ExecutionContext, m: DynamoRead[A]):
   Future[Either[GetItemError, GetItemResult[A]]] = {
     AwsClient.post[GetItemRequest, GetItemResponse, GetItemResult[A], GetItemError](
@@ -34,10 +35,7 @@ object GetItemAction {
   }
 
   private def responseToResult[A](res: GetItemResponse)(implicit m: DynamoRead[A]): GetItemError \/ GetItemResult[A] = {
-
-    val dynamoTypeOpt: Option[DynamoType] = res.item.extractOpt[Map[String, DynamoType]].map(map => M(map.toList))
-
-    val result: GetItemError \/ Option[A] = dynamoTypeOpt match {
+    val result = res.item.extractOpt[ROOT].map(_.dynamoType) match {
       case Some(dynamoType) =>
         DynamoRead[A].read(dynamoType) match {
           case DynamoReadSuccess(a) => \/-(Some(a))

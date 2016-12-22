@@ -4,6 +4,20 @@ import dynamo.ast._
 import org.json4s.CustomSerializer
 import org.json4s.JsonAST._
 
+private [dynamite] case class ROOT(dynamoType: DynamoType)
+
+private[dynamite] class ROOTTypeSerializer extends CustomSerializer[ROOT](format => (ROOTTypeSerializer.JValueToROOT, ROOTTypeSerializer.ROOTToJValue))
+
+object ROOTTypeSerializer {
+  val JValueToROOT: PartialFunction[JValue, ROOT] = {
+    case JObject(elems) => ROOT(M(elems.map(kv => kv._1 -> DynamoTypeSerializer.JValueToAwsDynamoType(kv._2))))
+  }
+
+  val ROOTToJValue: PartialFunction[Any, JValue] = {
+    case ROOT(M(elements)) => JObject(elements.map(kv => kv._1 -> DynamoTypeSerializer.AwsDynamoTypeToJValue(kv._2)))
+  }
+}
+
 private[dynamite] class DynamoTypeSerializer extends CustomSerializer[DynamoType](format => (DynamoTypeSerializer.JValueToAwsDynamoType, DynamoTypeSerializer.AwsDynamoTypeToJValue))
 
 object DynamoTypeSerializer {
