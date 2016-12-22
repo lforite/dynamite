@@ -5,6 +5,7 @@ import org.dynamite.http.AmazonTargetHeader
 import org.dynamite.http.AwsClient._
 
 import scala.concurrent.{ExecutionContext, Future}
+import scalaz.{\/, \/-}
 
 object PutItemAction {
 
@@ -26,7 +27,7 @@ object PutItemAction {
     )(responseToResult)
   }
 
-  private def responseToResult(putItemResponse: PutItemResponse): PutItemResult = {
-    PutItemResult()
+  private def responseToResult(putItemResponse: PutItemResponse): PutItemError \/ PutItemResult = {
+    \/-(PutItemResult())
   }
 }

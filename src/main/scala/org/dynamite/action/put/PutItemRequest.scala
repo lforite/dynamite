@@ -22,10 +22,7 @@ private[dynamite] case class PutItemRequest[A](
   returnValues: Option[String] = None
 )
 
-
 private[dynamite] object PutItemRequest {
-
-
   implicit def toRequestBody[A] = new JsonSerializable[PutItemRequest[A]] {
     def serialize(putItemRequest: PutItemRequest[A]): DynamoCommonError \/ RequestBody = {
       (for {

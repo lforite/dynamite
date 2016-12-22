@@ -1,6 +1,7 @@
 package org.dynamite
 
 import dynamo.ast.DynamoScalarType
+import dynamo.ast.reads.DynamoRead
 import org.dynamite.action.get.GetItemAction
 import org.dynamite.action.put._
 import org.dynamite.dsl.{AwsCredentials, ClientConfiguration, GetItemError, PutItemError}
@@ -32,7 +33,7 @@ trait DynamoClient {
   def get[A](
     primaryKey: (String, DynamoScalarType),
     sortKey: Option[(String, DynamoScalarType)],
-    consistentRead: Boolean)(implicit m: Manifest[A]):
+    consistentRead: Boolean)(implicit m: DynamoRead[A]):
   Future[Either[GetItemError, GetItemResult[A]]]
 
   /**
@@ -81,7 +82,7 @@ case class DynamiteClient(
   override def get[A](
     primaryKey: (String, DynamoScalarType),
     sortKey: Option[(String, DynamoScalarType)] = None,
-    consistentRead: Boolean = false)(implicit m: Manifest[A]):
+    consistentRead: Boolean = false)(implicit m: DynamoRead[A]):
   Future[Either[GetItemError, GetItemResult[A]]] = {
     GetItemAction.get(configuration, credentials, primaryKey, sortKey, consistentRead)
   }

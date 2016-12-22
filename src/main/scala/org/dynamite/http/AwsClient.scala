@@ -15,7 +15,7 @@ private[dynamite] object AwsClient {
     region: AwsRegion,
     credentials: AwsCredentials,
     targetHeader: AmazonTargetHeader)
-    (respToRes: RESPONSE => RESULT)
+    (respToRes: RESPONSE => ERR \/ RESULT)
     (implicit
       ec: ExecutionContext,
       protocol: DynamoProtocol[REQUEST, RESPONSE, RESULT, ERR]):
@@ -63,13 +63,13 @@ private[dynamite] object AwsClient {
 
   private[this] def toResult[RESPONSE: JsonDeserializable, RESULT, ERR >: DynamoCommonError](
     res: AwsHttpResponse,
-    respToRes: RESPONSE => RESULT,
+    respToRes: RESPONSE => ERR \/ RESULT,
     toErrors: PartialFunction[AwsError, ERR]): ERR \/ RESULT = {
     for {
       _ <- checkErrors(res, toErrors)
       json <- RequestParser.parse(res.responseBody.value)
       response = JsonDeserializable[RESPONSE].deserialize(json)
-      result = respToRes(response)
+      result <- respToRes(response)
     } yield result
   }
 
