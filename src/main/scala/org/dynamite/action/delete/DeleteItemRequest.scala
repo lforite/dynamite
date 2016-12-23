@@ -1,6 +1,6 @@
 package org.dynamite.action.delete
 
-import org.dynamite.ast.AwsScalarType
+import dynamo.ast.DynamoScalarType
 import org.dynamite.dsl._
 import org.json4s.Extraction._
 import org.json4s.JsonDSL._
@@ -11,7 +11,7 @@ import scalaz.Scalaz._
 import scalaz.\/
 
 private[dynamite] case class DeleteItemRequest(
-  key: List[(String, AwsScalarType)],
+  key: List[(String, DynamoScalarType)],
   returnValues: Option[String] = Some("NONE"),
   table: AwsTable
 )

@@ -1,10 +1,11 @@
 package org.dynamite.action.delete
 
-import org.dynamite.ast.AwsScalarType
+import dynamo.ast.DynamoScalarType
 import org.dynamite.dsl.{AwsCredentials, ClientConfiguration, DeleteItemError}
 import org.dynamite.http.{AmazonTargetHeader, AwsClient}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scalaz.\/-
 
 object DeleteItemAction {
 
@@ -13,8 +14,8 @@ object DeleteItemAction {
   def delete(
     configuration: ClientConfiguration,
     credentials: AwsCredentials,
-    primaryKey: (String, AwsScalarType),
-    sortKey: Option[(String, AwsScalarType)]
+    primaryKey: (String, DynamoScalarType),
+    sortKey: Option[(String, DynamoScalarType)]
   )(implicit ec: ExecutionContext): Future[Either[DeleteItemError, DeleteItemResult]] = {
     AwsClient.post[DeleteItemRequest, DeleteItemResponse, DeleteItemResult, DeleteItemError](
       DeleteItemRequest(
@@ -24,10 +25,7 @@ object DeleteItemAction {
       configuration.awsRegion,
       credentials,
       DeleteTargetHeader
-    )(_ => DeleteItemResult())
+    )(_ => \/-(DeleteItemResult()))
   }
 
-//  private def toResult(response: DeleteItemResponse): DeleteItemResult = {
-//
-//  }
 }
