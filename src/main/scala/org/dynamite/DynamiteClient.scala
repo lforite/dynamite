@@ -20,7 +20,7 @@ trait DynamoClient {
     *
     * {{{
     * case class Student(name: String)
-    * client.get[Student]("id" -> S("studentId1")) //yields Future[Either[DynamoError, GetItemResult[Student]]]
+    * client.get[Student]("id" -> S("studentId1")) //yields Future[Either[GetItemError, GetItemResult[Student]]]
     * }}}
     *
     * @param primaryKey     The primary key to identify the record to fetch
@@ -56,6 +56,25 @@ trait DynamoClient {
     *         a meaningful error of what went wrong.
     */
   def put[A](item: A)(implicit m: DynamoWrite[A]): Future[Either[PutItemError, PutItemResult]]
+
+  /**
+    * Delete a single item identified by the Primary Key + Sort Key (if exists) in DynamoDB.
+    * Usage:
+    * {{{
+    * client.delete("id" -> S("a_random_id")) //yields Future[Either[DeleteItemError, PutItemResult]]
+    * }}}
+    *
+    * @param primaryKey The key to identify the item to delete
+    * @param sortKey The sort key, if exists, to identify the item to delete
+    * @return The result of the delete operation represented as a disjunction in a plain Scala Future.
+    *         If the operation completes without error, the disjunction will be right based and will contain
+    *         the actual result of the operation. The disjunction will be left based otherwise and will contain
+    *         a meaningful error of what went wrong.
+    */
+  def delete(
+    primaryKey: (String, DynamoScalarType),
+    sortKey: Option[(String, DynamoScalarType)] = None
+  ): Future[Either[DeleteItemError, DeleteItemResult]]
 }
 
 /**
@@ -94,7 +113,7 @@ case class DynamiteClient(
     PutItemAction.put(configuration, credentials, item)
   }
 
-  def delete(
+  override def delete(
     primaryKey: (String, DynamoScalarType),
     sortKey: Option[(String, DynamoScalarType)] = None
   ): Future[Either[DeleteItemError, DeleteItemResult]] = {
