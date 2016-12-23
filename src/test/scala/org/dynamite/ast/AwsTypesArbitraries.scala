@@ -21,12 +21,12 @@ object AwsTypesArbitraries {
     (1, delay(oneOf(LGen, NSGen, SSGen, MGen, Gen.const(NULL))))
   )
 
-  def SGen = arbitrary[String] map S
-  def NGen = arbitrary[Number] map (i => N(i.toString))
-  def BOOLGen = arbitrary[Boolean] map BOOL
-  def MGen = listOfN(size, kvGen) map M
-  def NSGen = listOfN(size, NGen) map (s => NS(s.toSet))
-  def SSGen = listOfN(size, SGen) map (s => SS(s.toSet))
+  def SGen: Gen[S] = arbitrary[String] map S
+  def NGen: Gen[N] = arbitrary[Number] map (i => N(i.toString))
+  def BOOLGen: Gen[BOOL] = arbitrary[Boolean] map BOOL
+  def MGen: Gen[M] = listOfN(size, kvGen) map M
+  def NSGen: Gen[NS] = listOfN(size, NGen) map (s => NS(s.toSet))
+  def SSGen: Gen[SS] = listOfN(size, SGen) map (s => SS(s.toSet))
 
   def LGen: Gen[L[DynamoType]] = listOfN(size, AwsTypeGen) map (L(_))
   def SimpleTypeGen: Gen[DynamoScalarType] = oneOf(SGen, NGen, BOOLGen)
@@ -37,5 +37,5 @@ object AwsTypesArbitraries {
   } yield (key, value)
 
 
-  private def size = choose(0, 5).sample.get
+  private def size = choose(0, 3).sample.get
 }

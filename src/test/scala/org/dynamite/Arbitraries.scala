@@ -2,8 +2,8 @@ package org.dynamite
 
 import org.dynamite.dsl.StatusCode
 import org.dynamite.http.HttpHeader
-import org.json4s.JsonAST.{JObject, _}
-import org.json4s.jackson.Serialization.write
+import org.json4s.JsonAST.{JArray, JObject, JString, _}
+import org.json4s.jackson.JsonMethods._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen.{oneOf, _}
 import org.scalacheck.{Arbitrary, Gen}
@@ -14,21 +14,21 @@ case class ValidJson(json: String)
 
 object Arbitraries {
 
-  implicit val validJsonArbitrary = Arbitrary[ValidJson] {
+  implicit val validJsonArbitrary: Arbitrary[ValidJson] = Arbitrary[ValidJson] {
     for {
       jsObject <- genJObject
-    } yield ValidJson(write(jsObject))
+    } yield ValidJson(compact(render(jsObject)))
   }
 
-  implicit val jsObjectArbitrary = Arbitrary[JObject] {
+  implicit val jsObjectArbitrary: Arbitrary[JObject] = Arbitrary[JObject] {
     genJObject
   }
 
-  implicit val statusCodesArbitrary = Arbitrary[StatusCode] {
+  implicit val statusCodesArbitrary: Arbitrary[StatusCode] = Arbitrary[StatusCode] {
     Gen.choose(200, 500) map StatusCode
   }
 
-  implicit val headersArbitrary = Arbitrary[List[HttpHeader]] {
+  implicit val headersArbitrary: Arbitrary[List[HttpHeader]] = Arbitrary[List[HttpHeader]] {
     listOfN(choose(0, 30).sample.get, genHeader)
   }
 
@@ -36,11 +36,11 @@ object Arbitraries {
     id <- identifier
     anyString <- alphaStr.filter(_.trim.length > 0)
   } yield new HttpHeader {
-    def render = id -> anyString
+    def render: (String, String) = id -> anyString
   }
 
   private def genJObject: Gen[JObject] = for {
-    fields <- listOfN(size, genField)
+    fields <- listOfN(5, genField)
   } yield JObject(fields)
 
   private def genField: Gen[JField] = for {
@@ -65,5 +65,5 @@ object Arbitraries {
       arbitrary[Boolean].map(JBool(_)))
   }
 
-  private def size = choose(0, 3).sample.get
+  private def size = choose(1, 3).sample.get
 }
