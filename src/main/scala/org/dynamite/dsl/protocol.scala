@@ -1,8 +1,8 @@
 package org.dynamite.dsl
 
 import org.dynamite.action.delete.{DeleteItemRequest, DeleteItemResponse, DeleteItemResult}
-import org.dynamite.action.get.{GetItemRequest, GetItemResponse}
-import org.dynamite.action.put.{GetItemResult, PutItemRequest, PutItemResponse, PutItemResult}
+import org.dynamite.action.get.{GetItemRequest, GetItemResponse, GetItemResult}
+import org.dynamite.action.put.{PutItemRequest, PutItemResponse, PutItemResult}
 
 private[dynamite] trait DynamoProtocol[REQUEST, RESPONSE, RESULT, ERR >: DynamoCommonError] {
 

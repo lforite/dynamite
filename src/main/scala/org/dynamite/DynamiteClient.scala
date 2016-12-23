@@ -4,7 +4,7 @@ import dynamo.ast.DynamoScalarType
 import dynamo.ast.reads.DynamoRead
 import dynamo.ast.writes.DynamoWrite
 import org.dynamite.action.delete.{DeleteItemAction, DeleteItemResult}
-import org.dynamite.action.get.GetItemAction
+import org.dynamite.action.get.{GetItemAction, GetItemResult}
 import org.dynamite.action.put._
 import org.dynamite.dsl._
 
