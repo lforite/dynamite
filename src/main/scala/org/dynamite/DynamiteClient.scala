@@ -61,7 +61,7 @@ trait DynamoClient {
     * Delete a single item identified by the Primary Key + Sort Key (if exists) in DynamoDB.
     * Usage:
     * {{{
-    * client.delete("id" -> S("a_random_id")) //yields Future[Either[DeleteItemError, PutItemResult]]
+    * client.delete("id" -> S("a_random_id")) //yields Future[Either[DeleteItemError, DeleteItemResult]]
     * }}}
     *
     * @param primaryKey The key to identify the item to delete
