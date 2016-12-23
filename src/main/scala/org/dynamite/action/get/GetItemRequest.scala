@@ -1,6 +1,6 @@
 package org.dynamite.action.get
 
-import org.dynamite.ast.AwsScalarType
+import dynamo.ast.DynamoScalarType
 import org.dynamite.dsl._
 import org.json4s.Extraction._
 import org.json4s.JsonDSL._
@@ -14,7 +14,7 @@ private[dynamite] case class GetItemRequest(
   attributes: Option[List[String]] = None,
   consistentRead: Boolean = false,
   expressionAttributeNames: Option[Map[String, String]] = None,
-  key: List[(String, AwsScalarType)],
+  key: List[(String, DynamoScalarType)],
   projection: Option[String] = None,
   returnConsumedCapacity: Option[String] = None,
   table: AwsTable)

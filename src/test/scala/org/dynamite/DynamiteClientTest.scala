@@ -3,7 +3,12 @@ package org.dynamite
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.matching._
 import org.dynamite.action.put.{GetItemResult, PutItemResult}
-import org.dynamite.ast.S
+import dynamo.ast._
+import cats.implicits._
+import dynamo.ast.reads.DynamoRead
+import dynamo.ast.reads.DynamoRead._
+import dynamo.ast.writes.DynamoWrite
+import dynamo.ast.writes.DynamoWrite._
 import org.dynamite.dsl._
 import org.dynamite.http.HttpServer
 import org.specs2.Specification
@@ -13,6 +18,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 case class Dummy(id: String, test: String)
+object Dummy {
+  implicit val reader: DynamoRead[Dummy] =
+    (read[String].at("id") |@| read[String].at("test")) map Dummy.apply
+
+  implicit val writer: DynamoWrite[Dummy] =
+    (write[String].at("id") |@| write[String].at("test")) contramap(d => (d.id, d.test))
+}
 
 class DynamiteClientTest extends Specification with HttpServer { def is = s2"""
       Specifications for the DynamiteClient

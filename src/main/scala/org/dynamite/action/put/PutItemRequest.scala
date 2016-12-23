@@ -1,8 +1,8 @@
 package org.dynamite.action.put
 
-import org.dynamite.ast.AwsJsonWriter
+import dynamo.ast.DynamoType
+import org.dynamite.ast.ROOT
 import org.dynamite.dsl._
-import org.json4s.DefaultFormats
 import org.json4s.Extraction._
 import org.json4s.JsonAST.JValue
 import org.json4s.JsonDSL._
@@ -12,7 +12,7 @@ import scalaz.Scalaz._
 import scalaz.\/
 
 private[dynamite] case class PutItemRequest[A](
-  item: A,
+  item: DynamoType,
   conditionExpression: Option[String] = None,
   expressionAttributeNames: Option[Map[String, String]] = None,
   expressionAttributeValues: Option[Map[String, String]] = None,
@@ -22,10 +22,7 @@ private[dynamite] case class PutItemRequest[A](
   returnValues: Option[String] = None
 )
 
-
 private[dynamite] object PutItemRequest {
-
-
   implicit def toRequestBody[A] = new JsonSerializable[PutItemRequest[A]] {
     def serialize(putItemRequest: PutItemRequest[A]): DynamoCommonError \/ RequestBody = {
       (for {
@@ -38,9 +35,9 @@ private[dynamite] object PutItemRequest {
 
   private def toJson[A](request: PutItemRequest[A]): DynamoCommonError \/ JValue = {
     (for {
-      item <- \/.fromTryCatchNonFatal[JValue](decompose(request.item)(DefaultFormats))
+      item <- \/.fromTryCatchNonFatal[JValue](decompose(ROOT(request.item))(Format.defaultFormats))
     } yield {
-      ("Item" -> AwsJsonWriter.toAws(item)) ~
+      ("Item" -> item) ~
         ("ConditionExpression" -> request.conditionExpression) ~
         ("ExpressionAttributeNames" -> request.expressionAttributeNames) ~
         ("ExpressionAttributeValues" -> request.expressionAttributeValues) ~

@@ -1,8 +1,10 @@
 package org.dynamite
 
+import dynamo.ast.DynamoScalarType
+import dynamo.ast.reads.DynamoRead
+import dynamo.ast.writes.DynamoWrite
 import org.dynamite.action.get.GetItemAction
 import org.dynamite.action.put._
-import org.dynamite.ast.AwsScalarType
 import org.dynamite.dsl.{AwsCredentials, ClientConfiguration, GetItemError, PutItemError}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,9 +32,9 @@ trait DynamoClient {
     *         and return a meaningful error of what went wrong.
     */
   def get[A](
-    primaryKey: (String, AwsScalarType),
-    sortKey: Option[(String, AwsScalarType)],
-    consistentRead: Boolean)(implicit m: Manifest[A]):
+    primaryKey: (String, DynamoScalarType),
+    sortKey: Option[(String, DynamoScalarType)],
+    consistentRead: Boolean)(implicit m: DynamoRead[A]):
   Future[Either[GetItemError, GetItemResult[A]]]
 
   /**
@@ -52,7 +54,7 @@ trait DynamoClient {
     *         the actual result of the operation. The disjunction will be left based otherwise and will contain
     *         a meaningful error of what went wrong.
     */
-  def put[A](item: A)(implicit m: Manifest[A]): Future[Either[PutItemError, PutItemResult]]
+  def put[A](item: A)(implicit m: DynamoWrite[A]): Future[Either[PutItemError, PutItemResult]]
 }
 
 /**
@@ -79,14 +81,14 @@ case class DynamiteClient(
   extends DynamoClient {
 
   override def get[A](
-    primaryKey: (String, AwsScalarType),
-    sortKey: Option[(String, AwsScalarType)] = None,
-    consistentRead: Boolean = false)(implicit m: Manifest[A]):
+    primaryKey: (String, DynamoScalarType),
+    sortKey: Option[(String, DynamoScalarType)] = None,
+    consistentRead: Boolean = false)(implicit m: DynamoRead[A]):
   Future[Either[GetItemError, GetItemResult[A]]] = {
     GetItemAction.get(configuration, credentials, primaryKey, sortKey, consistentRead)
   }
 
-  override def put[A](item: A)(implicit m: Manifest[A]):
+  override def put[A](item: A)(implicit m: DynamoWrite[A]):
   Future[Either[PutItemError, PutItemResult]] = {
     PutItemAction.put(configuration, credentials, item)
   }

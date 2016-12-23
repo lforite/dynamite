@@ -10,8 +10,11 @@ trait HttpServer {
   def withHttpServer[T](unitTest: WireMockServer => T): T = {
     val server = new WireMockServer(wireMockConfig().bindAddress("localhost").dynamicPort().dynamicHttpsPort())
     server.start()
-    val result = unitTest(server)
-    server.shutdown()
-    result
+    try {
+      val result = unitTest(server)
+      result
+    } finally {
+      server.shutdown()
+    }
   }
 }
