@@ -1,7 +1,7 @@
-package org.dynamite.dsl
+package org.dynamite.action.get
 
 import dynamo.ast.S
-import org.dynamite.action.get.GetItemRequest
+import org.dynamite.dsl.AwsTable
 import org.dynamite.dsl.Format._
 import org.json4s.JsonAST.{JBool, JNothing, JObject, JString}
 import org.specs2.mutable.Specification
