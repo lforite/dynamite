@@ -29,5 +29,4 @@ scalacOptions ++= Seq(
   "-target:jvm-1.8",
   "-encoding", "UTF-8")
 
-resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/releases"

@@ -40,7 +40,6 @@ private[dynamite] object AwsClient {
     targetHeader: AmazonTargetHeader): DynamoCommonError \/ AwsHttpRequest = {
     for {
       requestBody <- JsonSerializable[REQUEST].serialize(request)
-      _ <- println(s"Request body: $requestBody").right
       dateStamp = AwsDate(ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime)
       headers = AcceptEncodingHeader("identity") ::
         ContentTypeHeader("application/x-amz-json-1.0") ::

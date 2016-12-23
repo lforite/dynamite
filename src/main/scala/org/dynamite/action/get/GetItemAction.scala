@@ -2,7 +2,6 @@ package org.dynamite.action.get
 
 import dynamo.ast.DynamoScalarType
 import dynamo.ast.reads.{DynamoRead, DynamoReadError, DynamoReadSuccess}
-import org.dynamite.action.put.GetItemResult
 import org.dynamite.ast.ROOT
 import org.dynamite.dsl.Format._
 import org.dynamite.dsl.{AwsCredentials, ClientConfiguration, GetItemError, JsonDeserialisationError}
