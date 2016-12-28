@@ -29,6 +29,7 @@ case class ProvisionedThroughputExceededError(description: String)
   extends AwsError
     with GetItemError
     with PutItemError
+    with DeleteItemError
 
 /**
   * The operation tried to access a nonexistent table or index. The
@@ -41,6 +42,7 @@ case class ResourceNotFoundError(description: String)
   extends AwsError
     with GetItemError
     with PutItemError
+    with DeleteItemError
 
 /**
   * An internal error occurred on DynamoDB side. You might retry your request.
@@ -51,6 +53,7 @@ case class InternalServerError(description: String)
   extends AwsError
     with GetItemError
     with PutItemError
+    with DeleteItemError
 
 /**
   * DynamoDB is currently unavailable. (This should be a temporary state.). You might retry your request.
@@ -61,12 +64,14 @@ case class ServiceUnavailableError(description: String)
   extends AwsError
     with GetItemError
     with PutItemError
+    with DeleteItemError
 
 
 case class InvalidCredentialsError(description: String)
   extends AwsError
     with GetItemError
     with PutItemError
+    with DeleteItemError
 
 /**
   * This error should not happen, it would indicate a that a case has not been covered with the parsing of DynamoDB error
@@ -96,6 +101,7 @@ case class ConditionalCheckFailedError(description: String)
 case class ItemCollectionSizeLimitExceededError(description: String)
   extends AwsError
     with PutItemError
+    with DeleteItemError
 
 trait AwsError {
   val description: String
