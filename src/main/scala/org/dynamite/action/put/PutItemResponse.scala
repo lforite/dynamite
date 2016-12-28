@@ -4,7 +4,7 @@ import org.dynamite.dsl.JsonDeserializable
 import org.json4s._
 
 
-private[dynamite] case class PutItemResponse(attributes: JValue)
+private[dynamite] case class PutItemResponse(attributes: JValue) extends AnyVal
 
 private[dynamite] object PutItemResponse {
   implicit val fromJson = new JsonDeserializable[PutItemResponse] {

@@ -27,35 +27,35 @@ case class AwsCredentials(accessKey: AwsAccessKey, secretKey: AwsSecretKey)
   *
   * @param value the value of the Aws Access Key
   */
-case class AwsAccessKey(value: String)
+case class AwsAccessKey(value: String) extends AnyVal
 
 /**
   * The Aws Secret Key
   *
   * @param value the value of the Aws Secret Key
   */
-case class AwsSecretKey(value: String)
+case class AwsSecretKey(value: String) extends AnyVal
 
 /**
   * The table to execute query against
   *
   * @param value the table name
   */
-case class AwsTable(value: String)
+case class AwsTable(value: String) extends AnyVal
 
 /**
   * The name of the region in which the DynamoDB instance is located in.
   *
   * @param value the name of the region
   */
-case class AwsRegionName(value: String)
+case class AwsRegionName(value: String) extends AnyVal
 
 /**
   * The host to reach the DynamoDB instance.
   *
   * @param value the host.
   */
-case class AwsHost(value: String)
+case class AwsHost(value: String) extends AnyVal
 
 trait AwsRegion {
   val name: AwsRegionName

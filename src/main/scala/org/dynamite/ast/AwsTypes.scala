@@ -4,7 +4,7 @@ import dynamo.ast._
 import org.json4s.CustomSerializer
 import org.json4s.JsonAST._
 
-private [dynamite] case class ROOT(dynamoType: DynamoType)
+private [dynamite] case class ROOT(dynamoType: DynamoType) extends AnyVal
 
 private[dynamite] class ROOTTypeSerializer extends CustomSerializer[ROOT](format => (ROOTTypeSerializer.JValueToROOT, ROOTTypeSerializer.ROOTToJValue))
 
