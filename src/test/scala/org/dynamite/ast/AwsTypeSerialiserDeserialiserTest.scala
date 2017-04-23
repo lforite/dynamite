@@ -1,18 +1,17 @@
 package org.dynamite.ast
 
-import dynamo.ast.DynamoType
+import dynamo.ast._
+import io.circe.{Decoder, Encoder}
 import org.dynamite.ast.AwsTypesArbitraries._
-import org.json4s.jackson.Serialization.{read, write}
+import org.dynamite.ast.AwsTypeSerialiser._
 import org.specs2.{ScalaCheck, Specification}
 
 class AwsTypeSerialiserDeserialiserTest extends Specification with ScalaCheck { override def is = s2"""
       Serialise and then deserialise any AwsType should yield the original value $serialiseDeserialise
     """
 
-  import org.dynamite.dsl.Format.defaultFormats
-
   def serialiseDeserialise = prop { awsType: DynamoType =>
-    read[DynamoType](write(awsType)) must_== awsType
+    Decoder[DynamoType].decodeJson(Encoder[DynamoType].apply(awsType)) must beRight(awsType)
   }.set(minTestsOk = 20000, workers = 10)
 
 }

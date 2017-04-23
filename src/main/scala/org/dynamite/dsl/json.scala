@@ -1,14 +1,8 @@
 package org.dynamite.dsl
 
-import org.dynamite.ast.{DynamoTypeSerializer, ROOTTypeSerializer}
-import org.json4s.JsonAST.JValue
-import org.json4s.{DefaultFormats, Formats}
+import io.circe.Json
 
 import scalaz.\/
-
-object Format {
-  implicit val defaultFormats: Formats =  DefaultFormats + new AwsErrorSerializer + new DynamoTypeSerializer + new ROOTTypeSerializer
-}
 
 private[dynamite] trait JsonSerializable[A] {
   def serialize(a: A): DynamoCommonError \/ RequestBody
@@ -19,7 +13,7 @@ private[dynamite] object JsonSerializable {
 }
 
 private[dynamite] trait JsonDeserializable[A] {
-  def deserialize(jValue: JValue): A
+  def deserialize(json: Json): A
 }
 
 private[dynamite] object JsonDeserializable {

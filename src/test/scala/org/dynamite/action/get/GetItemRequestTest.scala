@@ -1,9 +1,8 @@
 package org.dynamite.action.get
 
 import dynamo.ast.S
+import io.circe.{Encoder, Json}
 import org.dynamite.dsl.AwsTable
-import org.dynamite.dsl.Format._
-import org.json4s.JsonAST.{JBool, JNothing, JObject, JString}
 import org.specs2.mutable.Specification
 
 class GetItemRequestTest extends Specification { override def is = s2"""
@@ -12,19 +11,19 @@ class GetItemRequestTest extends Specification { override def is = s2"""
     """
 
   def toJson = {
-    GetItemRequest.toJson(GetItemRequest(
+    Encoder[GetItemRequest].apply(GetItemRequest(
       key = List("id" -> S("123")),
       table = AwsTable("test"))
     ) must be_==(
-      JObject(
-        "Attributes" -> JNothing,
-        "ConsistentRead" -> JBool(false),
-        "ExpressionAttributeNames" -> JNothing,
-        "Key" -> JObject("id" -> JObject("S" -> JString("123"))),
-        "ProjectionExpression" -> JNothing,
-        "ReturnConsumedCapacity" -> JNothing,
-        "TableName" -> JString("test")
-      )
+      Json.fromFields(List(
+        "Attributes" -> Json.Null,
+        "ConsistentRead" -> Json.False,
+        "ExpressionAttributeNames" -> Json.Null,
+        "Key" -> Json.fromFields(List("id" -> Json.fromFields(List("S" -> Json.fromString("123"))))),
+        "ProjectionExpression" -> Json.Null,
+        "ReturnConsumedCapacity" -> Json.Null,
+        "TableName" -> Json.fromString("test")
+      ))
     )
   }
 }

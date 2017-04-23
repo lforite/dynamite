@@ -1,13 +1,12 @@
 package org.dynamite
 
+import io.circe.Json
+import io.circe.syntax._
 import org.dynamite.dsl.StatusCode
 import org.dynamite.http.HttpHeader
-import org.json4s.JsonAST.{JArray, JObject, JString, _}
-import org.json4s.jackson.JsonMethods._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen.{oneOf, _}
 import org.scalacheck.{Arbitrary, Gen}
-import org.dynamite.dsl.Format._
 
 /** Encapsulate a valid json as a string */
 case class ValidJson(json: String)
@@ -17,10 +16,10 @@ object Arbitraries {
   implicit val validJsonArbitrary: Arbitrary[ValidJson] = Arbitrary[ValidJson] {
     for {
       jsObject <- genJObject
-    } yield ValidJson(compact(render(jsObject)))
+    } yield ValidJson(jsObject.asJson.noSpaces)
   }
 
-  implicit val jsObjectArbitrary: Arbitrary[JObject] = Arbitrary[JObject] {
+  implicit val jsObjectArbitrary: Arbitrary[Json] = Arbitrary[Json] {
     genJObject
   }
 
@@ -39,30 +38,30 @@ object Arbitraries {
     def render: (String, String) = id -> anyString
   }
 
-  private def genJObject: Gen[JObject] = for {
+  private def genJObject: Gen[Json] = for {
     fields <- listOfN(5, genField)
-  } yield JObject(fields)
+  } yield Json.fromFields(fields)
 
-  private def genField: Gen[JField] = for {
+  private def genField: Gen[(String, Json)] = for {
     field <- identifier
     value <- genValue
   } yield (field, value)
 
-  private def genValue: Gen[JValue] = frequency(
+  private def genValue: Gen[Json] = frequency(
     (10,
       delay(genSimpleValue)),
     (1,
-      listOfN(size, arbitrary[String]).map(js => JArray(js map JString))),
+      listOfN(size, arbitrary[String]).map(js => Json.fromValues(js map Json.fromString))),
     (1,
-      delay(Gen.containerOfN[List, JValue](size, arbitrary[JObject]).map(JArray))))
+      delay(Gen.containerOfN[List, Json](size, arbitrary[Json]).map(Json.fromValues))))
 
-  def genSimpleValue: Gen[JValue] = {
+  def genSimpleValue: Gen[Json] = {
     oneOf(
-      arbitrary[String].map(JString),
-      arbitrary[Int].map(JInt(_)),
-      arbitrary[Double].map(JDecimal(_)),
-      arbitrary[Long].map(JLong),
-      arbitrary[Boolean].map(JBool(_)))
+      arbitrary[String].map(Json.fromString),
+      arbitrary[Int].map(Json.fromInt),
+      arbitrary[Double].map(Json.fromDouble(_).get),
+      arbitrary[Long].map(Json.fromLong),
+      arbitrary[Boolean].map(Json.fromBoolean))
   }
 
   private def size = choose(1, 3).sample.get

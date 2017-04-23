@@ -1,13 +1,11 @@
 package org.dynamite.action.get
 
 import dynamo.ast.DynamoScalarType
+import io.circe.{Printer, _}
+import io.circe.syntax._
+import org.dynamite.ast.AwsTypeSerialiser._
 import org.dynamite.dsl._
-import org.json4s.Extraction._
-import org.json4s.JsonDSL._
-import org.json4s._
-import org.json4s.jackson.JsonMethods._
 
-import scalaz.Scalaz._
 import scalaz.\/
 
 private[dynamite] case class GetItemRequest(
@@ -20,26 +18,31 @@ private[dynamite] case class GetItemRequest(
   table: AwsTable)
 
 private[dynamite] object GetItemRequest {
+  val printer: Printer = Printer.noSpaces.copy(dropNullKeys = true)
+
+  implicit val GetItemRequestEncoder: Encoder[GetItemRequest] = Encoder.forProduct7(
+    "Attributes",
+    "ConsistentRead",
+    "ExpressionAttributeNames",
+    "Key",
+    "ProjectionExpression",
+    "ReturnConsumedCapacity",
+    "TableName"
+  )((request: GetItemRequest) =>
+    (request.attributes,
+      request.consistentRead,
+      request.expressionAttributeNames,
+      request.key.toMap,
+      request.projection,
+      request.returnConsumedCapacity,
+      request.table.value))
 
   implicit val toRequestBody = new JsonSerializable[GetItemRequest] {
     def serialize(getItemRequest: GetItemRequest): DynamoCommonError \/ RequestBody = {
-      import org.dynamite.dsl.Format._
       (for {
-        json <- toJson(getItemRequest).right
-        renderedJson <- render(json).right
-        body <- \/.fromTryCatchNonFatal[String](compact(renderedJson))
+        body <- \/.fromTryCatchNonFatal[String](printer.pretty(getItemRequest.asJson))
       } yield RequestBody(body)) leftMap (e => JsonSerialisationError)
     }
-  }
-
-  def toJson(request: GetItemRequest)(implicit formats: Formats): JValue = {
-    ("Attributes" -> request.attributes) ~
-      ("ConsistentRead" -> request.consistentRead) ~
-      ("ExpressionAttributeNames" -> request.expressionAttributeNames) ~
-      ("Key" -> request.key.map(k => (k._1, decompose(k._2)))) ~
-      ("ProjectionExpression" -> request.projection) ~
-      ("ReturnConsumedCapacity" -> request.returnConsumedCapacity) ~
-      ("TableName" -> request.table.value)
   }
 
 }

@@ -22,9 +22,9 @@ object AwsTypesArbitraries {
   )
 
   def SGen: Gen[S] = arbitrary[String] map S
-  def NGen: Gen[N] = arbitrary[Number] map (i => N(i.toString))
+  def NGen: Gen[N] = arbitrary[Int] map (i => N(i.toString))
   def BOOLGen: Gen[BOOL] = arbitrary[Boolean] map BOOL
-  def MGen: Gen[M] = listOfN(size, kvGen) map M
+  def MGen: Gen[M] = listOfN(size, kvGen).map(_.toMap).map(_.toList) map M
   def NSGen: Gen[NS] = listOfN(size, NGen) map (s => NS(s.toSet))
   def SSGen: Gen[SS] = listOfN(size, SGen) map (s => SS(s.toSet))
 
