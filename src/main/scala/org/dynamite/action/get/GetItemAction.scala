@@ -2,8 +2,9 @@ package org.dynamite.action.get
 
 import dynamo.ast.DynamoScalarType
 import dynamo.ast.reads.{DynamoRead, DynamoReadError, DynamoReadSuccess}
+import io.circe.Decoder
+import org.dynamite.ast.AwsTypeSerialiser._
 import org.dynamite.ast.ROOT
-import org.dynamite.dsl.Format._
 import org.dynamite.dsl.{AwsCredentials, ClientConfiguration, GetItemError, JsonDeserialisationError}
 import org.dynamite.http.{AmazonTargetHeader, AwsClient}
 
@@ -33,12 +34,16 @@ object GetItemAction {
     )(responseToResult)
   }
 
-  private def responseToResult[A](res: GetItemResponse)(implicit m: DynamoRead[A]): GetItemError \/ GetItemResult[A] = {
-    val result = res.item.extractOpt[ROOT].map(_.dynamoType) match {
-      case Some(dynamoType) =>
-        DynamoRead[A].read(dynamoType) match {
-          case DynamoReadSuccess(a) => \/-(Some(a))
-          case DynamoReadError(path, error) => -\/(JsonDeserialisationError(s"""At path $path, got the following error: "$error"."""))
+  private def responseToResult[A: DynamoRead](res: GetItemResponse): GetItemError \/ GetItemResult[A] = {
+    val result = res.item match {
+      case Some(item) =>
+        Decoder[ROOT].decodeJson(item) match {
+          case Right(root) =>
+            DynamoRead[A].read(root.dynamoType) match {
+              case DynamoReadSuccess(a) => \/-(Some(a))
+              case DynamoReadError(path, error) => -\/(JsonDeserialisationError(s"""At path $path, got the following error: "$error"."""))
+            }
+          case Left(error) => \/-(None)
         }
       case None => \/-(None)
     }

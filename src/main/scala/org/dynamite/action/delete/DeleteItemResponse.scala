@@ -1,13 +1,13 @@
 package org.dynamite.action.delete
 
+import io.circe.Json
 import org.dynamite.dsl.JsonDeserializable
-import org.json4s._
 
-private[dynamite] case class DeleteItemResponse(attributes: JValue) extends AnyVal
+private[dynamite] case class DeleteItemResponse(attributes: Option[Json]) extends AnyVal
 
 private[dynamite] object DeleteItemResponse {
   implicit val fromJson = new JsonDeserializable[DeleteItemResponse] {
-    override def deserialize(jValue: JValue): DeleteItemResponse =
-      DeleteItemResponse(jValue \ "Attributes")
+    override def deserialize(json: Json): DeleteItemResponse =
+      DeleteItemResponse(json.asObject.flatMap(_.toMap.get("Attributes")))
   }
 }

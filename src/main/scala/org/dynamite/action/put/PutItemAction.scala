@@ -18,7 +18,7 @@ object PutItemAction {
     item: A
   )(implicit ec: ExecutionContext, m: DynamoWrite[A]):
   Future[Either[PutItemError, PutItemResult]] = {
-    post[PutItemRequest[A], PutItemResponse, PutItemResult, PutItemError](
+    post[PutItemRequest, PutItemResponse, PutItemResult, PutItemError](
       PutItemRequest(
         item = m.write(item),
         table = configuration.table),

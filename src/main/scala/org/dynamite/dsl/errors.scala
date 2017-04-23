@@ -1,7 +1,6 @@
 package org.dynamite.dsl
 
-import org.json4s.CustomSerializer
-import org.json4s.JsonAST.{JField, JObject, JString}
+import io.circe.Decoder
 
 sealed trait GetItemError
 sealed trait PutItemError
@@ -108,6 +107,7 @@ trait AwsError {
 }
 
 object AwsError {
+  implicit val AwsErrorDecoder: Decoder[AwsError] = Decoder.forProduct2("__type", "message")(AwsError.apply)
   def apply(errorType: String, description: String):AwsError = {
     errorType.split("#").last match {
       case "MissingAuthenticationTokenException" | "UnrecognizedClientException" => InvalidCredentialsError(description)
@@ -120,14 +120,3 @@ object AwsError {
     }
   }
 }
-
-private[dynamite] class AwsErrorSerializer extends CustomSerializer[AwsError](format => ( {
-  case JObject(List(JField("__type", JString(value)), JField("message", JString(description)))) => AwsError(value, description)
-  case e =>
-    //todo: add some logging here
-    UnrecognizedAwsError("Dynamite was not able to understand the resp onse from DynamoDB")
-},
-  //We are not interested in serialising those errors so this is a Dummy place holder
-  {
-    case _ => JObject()
-  }))

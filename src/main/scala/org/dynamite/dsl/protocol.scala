@@ -24,7 +24,7 @@ private[dynamite] object DynamoProtocol {
     }
   }
 
-  implicit def PutItemProtocol[A] = new DynamoProtocol[PutItemRequest[A], PutItemResponse, PutItemResult, PutItemError] {
+  implicit def PutItemProtocol[A] = new DynamoProtocol[PutItemRequest, PutItemResponse, PutItemResult, PutItemError] {
     val toErrorsSpecific: PartialFunction[AwsError, PutItemError] = {
       case e: PutItemError => e
     }
