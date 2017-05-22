@@ -68,3 +68,5 @@ jrebel.lic
 # paulp script
 /.lib/
 .history
+
+src/main/scala/org/dynamite/Playground.scala
