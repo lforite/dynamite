@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/lforite/dynamite.png?branch=master)](https://travis-ci.org/louis-forite/dynamite)
+[![Build Status](https://travis-ci.org/lforite/dynamite.png?branch=master)](https://travis-ci.org/lforite/dynamite)
 
 # Dynamite
 
